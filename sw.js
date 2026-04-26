@@ -2,16 +2,16 @@
 // MEGAR POS — SERVICE WORKER
 // ============================================
 
-const CACHE_NAME = 'megar-pos-v3';
+const CACHE_NAME = 'megar-pos-v4';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/pos-megar-transaksi.html',
-  '/pos-megar-admin.html',
-  '/pos-megar-nota.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/MegarPOS/',
+  '/MegarPOS/index.html',
+  '/MegarPOS/pos-megar-transaksi.html',
+  '/MegarPOS/pos-megar-admin.html',
+  '/MegarPOS/pos-megar-nota.html',
+  '/MegarPOS/manifest.json',
+  '/MegarPOS/icon-192.png',
+  '/MegarPOS/icon-512.png'
 ];
 
 // Install — cache semua aset
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Jangan cache halaman protected
-  const protectedPages = ['pos-megar-transaksi.html', 'pos-megar-admin.html'];
+  const protectedPages = ['pos-megar-transaksi.html', 'pos-megar-admin.html', 'pos-megar-nota.html'];
   if (protectedPages.some(p => url.pathname.includes(p))) {
     event.respondWith(fetch(event.request));
     return;
@@ -72,7 +72,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Fallback ke index jika halaman tidak ditemukan
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match('/MegarPOS/index.html');
         }
       });
     })
