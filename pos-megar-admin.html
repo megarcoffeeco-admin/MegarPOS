@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+<script>
+  // SECURITY GUARD — runs before anything else
+  (function() {
+    var admin = sessionStorage.getItem('megar_admin');
+    var pk = sessionStorage.getItem('megar_passkey');
+    if (!admin || !pk) {
+      window.location.replace('index.html');
+    }
+  })();
+</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Megar POS" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1e3a1e" />
+  <title>Admin — Megar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1e3a1e;
+      --green-mid:    #2d4a2d;
+      --green-soft:   #4a7c4a;
+      --green-light:  #7aab6e;
+      --green-pale:   #e8f2e8;
+      --green-pale2:  #f0f7f0;
+      --cream:        #f5f0e8;
+      --cream-dark:   #e0d8c8;
+      --warm-white:   #fdfaf5;
+      --brown:        #8b6340;
+      --brown-light:  #f5ede3;
+      --text-dark:    #1a2e1a;
+      --text-mid:     #3d5c3d;
+      --text-light:   #7a9a7a;
+      --text-faint:   #b0c8b0;
+      --error:        #c0392b;
+      --error-light:  #fdecea;
+      --shadow:       rgba(30,58,30,0.10);
+      --radius:       14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--green-pale2);
+      color: var(--text-dark);
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--green-deep);
+      padding: 13px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    }
+    .topbar-left { display: flex; flex-direction: column; }
+    .topbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--cream);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .topbar-label {
+      font-size: 10px;
+      color: var(--green-light);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .topbar-right { display: flex; gap: 8px; }
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.08);
+      border: none; border-radius: 10px;
+      color: var(--cream); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.16); }
+
+    /* ── Page wrapper ── */
+    .page { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      color: var(--text-dark);
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-light);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .card-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--green-pale);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-mid);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Summary strip ── */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      padding: 14px 12px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .summary-label {
+      font-size: 10px;
+      color: var(--text-light);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .summary-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--green-deep);
+      line-height: 1;
+    }
+    .summary-value.small { font-size: 15px; }
+    .summary-sub {
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 3px;
+    }
+
+    /* ── Arabika daily price ── */
+    .arabika-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+    .arabika-item {
+      background: var(--warm-white);
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .arabika-item.active-item {
+      border-color: var(--green-soft);
+      background: var(--green-pale);
+    }
+    .arabika-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .arabika-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .arabika-toggle {
+      position: relative;
+      width: 36px; height: 20px;
+      flex-shrink: 0;
+    }
+    .arabika-toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--cream-dark);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .arabika-toggle input:checked + .toggle-track { background: var(--green-soft); }
+    .arabika-toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    .price-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .price-prefix {
+      position: absolute;
+      left: 8px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--text-light);
+      pointer-events: none;
+    }
+    .price-input {
+      width: 100%;
+      padding: 7px 8px 7px 26px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      background: white;
+      transition: border-color 0.2s;
+    }
+    .price-input:focus { outline: none; border-color: var(--green-soft); }
+    .price-input:disabled { background: var(--green-pale2); color: var(--text-faint); }
+
+    .arabika-save-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 11px;
+      background: var(--green-mid);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .arabika-save-btn:hover { background: var(--green-soft); }
+    .arabika-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Menu list ── */
+    .menu-list { padding: 8px 0; }
+    .menu-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--green-pale);
+      transition: background 0.15s;
+    }
+    .menu-row:last-child { border-bottom: none; }
+    .menu-row:hover { background: var(--warm-white); }
+    .menu-row-info { flex: 1; min-width: 0; }
+    .menu-row-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .menu-row-cat {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-top: 1px;
+    }
+    .menu-row-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-mid);
+      min-width: 72px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .menu-row-price.manual-tag {
+      color: var(--brown);
+      font-size: 11px;
+      font-style: italic;
+    }
+    .menu-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Toggle switch (menu row) */
+    .row-toggle {
+      position: relative;
+      width: 36px; height: 20px;
+    }
+    .row-toggle input { opacity: 0; width: 0; height: 0; }
+    .row-toggle .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--cream-dark);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .row-toggle .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .row-toggle input:checked + .toggle-track { background: var(--green-soft); }
+    .row-toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    .btn-delete {
+      width: 28px; height: 28px;
+      background: var(--error-light);
+      border: none; border-radius: 8px;
+      color: var(--error);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover { background: var(--error); color: white; }
+
+    /* ── Add menu form ── */
+    .add-form {
+      padding: 14px 16px;
+      border-top: 1px solid var(--green-pale);
+      display: none;
+    }
+    .add-form.show { display: block; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .form-input, .form-select {
+      padding: 10px 12px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-dark);
+      background: var(--warm-white);
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--green-soft);
+    }
+    .form-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .form-checkbox-row input { width: 16px; height: 16px; accent-color: var(--green-soft); }
+    .form-checkbox-row label { font-size: 13px; color: var(--text-mid); cursor: pointer; }
+
+    .form-btns { display: flex; gap: 8px; }
+    .btn-cancel-form {
+      flex: 1;
+      padding: 11px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-mid);
+      cursor: pointer;
+    }
+    .btn-submit-form {
+      flex: 2;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: var(--green-mid);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-submit-form:hover { background: var(--green-soft); }
+    .btn-submit-form:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-add-menu {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--green-pale);
+      border: 1.5px solid var(--green-light);
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--green-mid);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-add-menu:hover { background: var(--green-pale); border-color: var(--green-soft); }
+
+    /* ── Transaksi hari ini ── */
+    .trx-list { padding: 0; }
+    .trx-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .trx-row:last-child { border-bottom: none; }
+    .trx-nota {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green-soft);
+      font-family: monospace;
+      flex-shrink: 0;
+    }
+    .trx-info { flex: 1; min-width: 0; }
+    .trx-items {
+      font-size: 12px;
+      color: var(--text-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .trx-meta {
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 1px;
+    }
+    .trx-total {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      flex-shrink: 0;
+    }
+    .trx-metode {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .trx-metode.Tunai { background: #e8f5e9; color: #2e7d32; }
+    .trx-metode.QRIS { background: #e3f2fd; color: #1565c0; }
+    .trx-metode.Transfer { background: #fff3e0; color: #e65100; }
+
+    .trx-empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--text-faint);
+      font-size: 13px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-deep);
+      color: white;
+      padding: 11px 22px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--error); }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(253,250,245,0.85);
+      z-index: 100;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .loading-overlay.show { opacity: 1; pointer-events: all; }
+    .spinner-lg {
+      width: 36px; height: 36px;
+      border: 3px solid var(--green-pale);
+      border-top-color: var(--green-soft);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--text-mid); }
+
+    /* ── Confirm modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 150;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 18px;
+      padding: 24px 20px; width: 100%; max-width: 320px;
+      animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
+    .modal-body { font-size: 13px; color: var(--text-mid); margin-bottom: 20px; line-height: 1.5; }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-cancel {
+      flex: 1; padding: 11px; border: 1.5px solid var(--cream-dark);
+      border-radius: 10px; background: white;
+      font-family: 'DM Sans', sans-serif; font-size: 13px;
+      color: var(--text-mid); cursor: pointer;
+    }
+    .modal-confirm-del {
+      flex: 1; padding: 11px; border: none;
+      border-radius: 10px; background: var(--error);
+      font-family: 'DM Sans', sans-serif; font-size: 13px;
+      font-weight: 600; color: white; cursor: pointer;
+    }
+
+
+    /* ── Tab navigation ── */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      padding: 0 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+    .tab-nav::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1.5px solid var(--cream-dark);
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .tab-btn.active {
+      background: var(--green-mid);
+      border-color: var(--green-mid);
+      color: white;
+    }
+
+    /* ── Tab sections ── */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* ── Weekly summary ── */
+    .week-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--green-pale);
+      gap: 12px;
+    }
+    .week-row:last-child { border-bottom: none; }
+    .week-day {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-mid);
+      min-width: 80px;
+    }
+    .week-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--green-pale);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .week-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-mid), var(--green-soft));
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .week-amount {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dark);
+      min-width: 80px;
+      text-align: right;
+    }
+    .week-trx {
+      font-size: 10px;
+      color: var(--text-faint);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* ── Kasir stats ── */
+    .kasir-stat-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--green-pale);
+      gap: 12px;
+    }
+    .kasir-stat-row:last-child { border-bottom: none; }
+    .kasir-avatar {
+      width: 36px; height: 36px;
+      background: var(--green-pale);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      color: var(--green-mid);
+      flex-shrink: 0;
+    }
+    .kasir-stat-info { flex: 1; }
+    .kasir-stat-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+    .kasir-stat-sub { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+    .kasir-stat-omzet { font-size: 14px; font-weight: 700; color: var(--green-deep); }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--green-pale);
+      flex-wrap: wrap;
+    }
+    .filter-input {
+      flex: 1;
+      min-width: 130px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-dark);
+      background: var(--warm-white);
+    }
+    .filter-input:focus { outline: none; border-color: var(--green-soft); }
+    .filter-btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px;
+      background: var(--green-mid);
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ── Manajemen Kasir ── */
+    .kasir-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .kasir-row:last-child { border-bottom: none; }
+    .kasir-row-info { flex: 1; }
+    .kasir-row-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+    .kasir-row-id { font-size: 11px; color: var(--text-faint); }
+    .kasir-passkey-badge {
+      font-size: 11px;
+      font-family: monospace;
+      background: var(--green-pale);
+      color: var(--green-mid);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* ── Add kasir form ── */
+    .kasir-add-form {
+      padding: 14px 16px;
+      border-top: 1px solid var(--green-pale);
+      display: none;
+    }
+    .kasir-add-form.show { display: block; }
+
+    /* ── Nav Tabs ── */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--green-pale2);
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .nav-tab {
+      flex: 1;
+      min-width: 70px;
+      padding: 8px 6px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .nav-tab.active {
+      background: white;
+      color: var(--green-mid);
+      font-weight: 600;
+      box-shadow: 0 1px 6px var(--shadow);
+    }
+
+    /* ── Tab pages ── */
+    .tab-page { display: none; }
+    .tab-page.active { display: block; }
+
+    /* ── Weekly table ── */
+    .week-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .week-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .week-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--green-pale);
+      color: var(--text-dark);
+    }
+    .week-table tr:last-child td { border-bottom: none; }
+    .week-table tr:hover td { background: var(--warm-white); }
+    .week-table .td-num {
+      font-weight: 600;
+      color: var(--green-mid);
+      text-align: right;
+    }
+    .week-table .td-right { text-align: right; }
+
+    /* ── Kasir management ── */
+    .kasir-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .kasir-row:last-child { border-bottom: none; }
+    .kasir-avatar {
+      width: 36px; height: 36px;
+      background: var(--green-pale);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      color: var(--green-mid);
+      flex-shrink: 0;
+    }
+    .kasir-info { flex: 1; }
+    .kasir-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+    .kasir-id { font-size: 11px; color: var(--text-faint); }
+    .kasir-passkey {
+      font-size: 12px;
+      color: var(--text-light);
+      font-family: monospace;
+      background: var(--green-pale2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .kasir-passkey:hover { background: var(--green-pale); }
+    .kasir-passkey.revealed { color: var(--text-dark); font-weight: 600; }
+
+    /* ── Date filter ── */
+    .date-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--green-pale);
+      flex-wrap: wrap;
+    }
+    .date-filter label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .date-filter input[type="date"] {
+      padding: 7px 10px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-dark);
+      background: var(--warm-white);
+    }
+    .date-filter input[type="date"]:focus { outline: none; border-color: var(--green-soft); }
+    .btn-today {
+      padding: 7px 12px;
+      border: 1.5px solid var(--green-soft);
+      border-radius: 8px;
+      background: var(--green-pale);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green-mid);
+      cursor: pointer;
+    }
+    .btn-filter-go {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--green-mid);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* ── Kasir add form ── */
+    .kasir-add-form {
+      padding: 14px 16px;
+      border-top: 1px solid var(--green-pale);
+      display: none;
+    }
+    .kasir-add-form.show { display: block; }
+
+    @media (min-width: 600px) {
+      .page { padding: 24px 24px 48px; }
+      .arabika-grid { grid-template-columns: 1fr 1fr; }
+      .nav-tab { font-size: 12px; padding: 9px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-brand">Megar</div>
+    <div class="topbar-label">Admin Dashboard</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-icon" id="refreshBtn" title="Refresh">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+    </button>
+    <button class="btn-icon" id="logoutBtn" title="Logout">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="overview">📊 Overview</button>
+    <button class="nav-tab" data-tab="transaksi">📋 Transaksi</button>
+    <button class="nav-tab" data-tab="mingguan">📅 Mingguan</button>
+    <button class="nav-tab" data-tab="menu">🌿 Menu</button>
+    <button class="nav-tab" data-tab="kasir">👤 Kasir</button>
+  </div>
+
+  <!-- ══ TAB: OVERVIEW ══ -->
+  <div class="tab-page active" id="tab-overview">
+
+  <!-- Summary Strip -->
+  <div class="summary-strip">
+    <div class="summary-card">
+      <div class="summary-label">Omzet Hari Ini</div>
+      <div class="summary-value small" id="omzetHariIni">Rp 0</div>
+      <div class="summary-sub" id="tglHariIni">—</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Transaksi</div>
+      <div class="summary-value" id="jmlTransaksi">0</div>
+      <div class="summary-sub">nota hari ini</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Menu Aktif</div>
+      <div class="summary-value" id="jmlMenuAktif">0</div>
+      <div class="summary-sub">dari total menu</div>
+    </div>
+  </div>
+
+  <!-- Transaksi Hari Ini -->
+  <div class="section-title">
+    📋 Transaksi Hari Ini
+    <span id="trxDate">—</span>
+  </div>
+  <div class="card">
+    <div class="trx-list" id="trxList">
+      <div class="trx-empty">Memuat data transaksi...</div>
+    </div>
+  </div>
+
+  <!-- Rekap Bulanan -->
+  <div class="section-title">
+    📊 Rekap Bulanan
+    <span>generate & simpan ke Google Drive</span>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Generate Laporan</div>
+    </div>
+    <div style="padding: 14px 16px;">
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.6;">
+        Rekap otomatis berjalan setiap tanggal 1. Gunakan tombol di bawah untuk generate rekap kapan saja — hasilnya tersimpan di <strong>Google Drive → POS Megar → Laporan → Rekap_Bulanan</strong>.
+      </p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:140px;">
+          <label class="form-label">Pilih Bulan</label>
+          <input class="form-input" type="month" id="rekapBulan" />
+        </div>
+        <div style="padding-top:18px;">
+          <button class="btn-submit-form" id="btnGenerateRekap" style="padding:10px 20px;white-space:nowrap;">
+            Generate Rekap
+          </button>
+        </div>
+      </div>
+      <div id="rekapStatus" style="margin-top:12px;font-size:13px;color:var(--text-light);min-height:20px;"></div>
+    </div>
+  </div>
+
+  </div><!-- /tab-overview -->
+
+  <!-- ══ TAB: TRANSAKSI ══ -->
+  <div class="tab-page" id="tab-transaksi">
+
+    <div class="section-title">
+      📋 Riwayat Transaksi
+      <span id="trxFilterLabel">hari ini</span>
+    </div>
+    <div class="card">
+      <div class="date-filter">
+        <label>Tanggal</label>
+        <input type="date" id="filterTanggal" />
+        <button class="btn-today" id="btnToday">Hari Ini</button>
+        <button class="btn-filter-go" id="btnFilterGo">Tampilkan</button>
+      </div>
+
+      <!-- Rekap per kasir -->
+      <div style="padding:10px 16px 0;" id="kasirSummaryWrap">
+        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Kasir</div>
+        <div id="kasirSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      </div>
+
+      <div class="trx-list" id="trxListFilter">
+        <div class="trx-empty">Pilih tanggal dan klik Tampilkan</div>
+      </div>
+    </div>
+  </div><!-- /tab-transaksi -->
+
+  <!-- ══ TAB: MINGGUAN ══ -->
+  <div class="tab-page" id="tab-mingguan">
+    <div class="section-title">
+      📅 Ringkasan 7 Hari Terakhir
+    </div>
+
+    <!-- Summary cards mingguan -->
+    <div class="summary-strip" id="weekSummaryStrip">
+      <div class="summary-card">
+        <div class="summary-label">Total Omzet</div>
+        <div class="summary-value small" id="weekOmzet">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Total Transaksi</div>
+        <div class="summary-value" id="weekTrx">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Hari Terbaik</div>
+        <div class="summary-value small" id="weekBest">—</div>
+      </div>
+    </div>
+
+    <!-- Menu terlaris minggu ini -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="card-title">Menu Terlaris Minggu Ini</div>
+      </div>
+      <div style="padding:8px 0;" id="weekTopMenu">
+        <div class="trx-empty">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- Tabel harian -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Omzet per Hari</div>
+        <button class="btn-add-menu" id="btnRefreshWeek">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="week-table" id="weekTable">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Hari</th>
+              <th class="td-right">Transaksi</th>
+              <th class="td-right">Omzet</th>
+            </tr>
+          </thead>
+          <tbody id="weekTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-mingguan -->
+
+  <!-- ══ TAB: MENU ══ -->
+  <div class="tab-page" id="tab-menu">
+
+    <!-- Arabika section moved here -->
+    <div class="section-title">
+      ☕ Update Harian Arabika
+      <span>set harga & status setiap hari</span>
+    </div>
+    <div class="card" id="arabikaCard2">
+      <div class="arabika-grid" id="arabikaGrid2"></div>
+      <div style="padding: 0 16px 14px;">
+        <button class="arabika-save-btn" id="arabikaBtn2">Simpan & Aktifkan</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:8px;">
+      🌿 Semua Menu
+      <span id="menuCount2">0 item</span>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Daftar Menu</div>
+        <button class="btn-add-menu" id="btnShowAddForm2">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Menu
+        </button>
+      </div>
+      <div class="add-form" id="addForm2">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama Item</label>
+            <input class="form-input" id="newItemName2" type="text" placeholder="Contoh: Cold Brew" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select class="form-select" id="newItemKat2">
+              <option value="Espresso Based">Espresso Based</option>
+              <option value="Manual Brew">Manual Brew</option>
+              <option value="Mocktail">Mocktail</option>
+              <option value="Chocolate & Matcha">Chocolate & Matcha</option>
+              <option value="Snack">Snack</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Harga (Rp)</label>
+            <input class="form-input" id="newItemHarga2" type="number" placeholder="0" min="0" />
+          </div>
+          <div class="form-group" style="justify-content:flex-end;padding-bottom:2px;">
+            <label class="form-label">&nbsp;</label>
+            <div class="form-checkbox-row" style="margin-bottom:0">
+              <input type="checkbox" id="newItemManual2" />
+              <label for="newItemManual2">Harga manual</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-btns">
+          <button class="btn-cancel-form" id="btnCancelAdd2">Batal</button>
+          <button class="btn-submit-form" id="btnSubmitAdd2">Tambah Menu</button>
+        </div>
+      </div>
+      <div class="menu-list" id="menuList2"></div>
+    </div>
+  </div><!-- /tab-menu -->
+
+  <!-- ══ TAB: KASIR ══ -->
+  <div class="tab-page" id="tab-kasir">
+    <div class="section-title">
+      👤 Manajemen Kasir
+      <span>tambah, nonaktifkan, lihat passkey</span>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Daftar Kasir</div>
+        <button class="btn-add-menu" id="btnShowAddKasir">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Kasir
+        </button>
+      </div>
+
+      <!-- Add kasir form -->
+      <div class="kasir-add-form" id="kasirAddForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama Kasir</label>
+            <input class="form-input" id="newKasirNama" type="text" placeholder="Contoh: Budi" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Passkey</label>
+            <input class="form-input" id="newKasirPasskey" type="text" placeholder="Contoh: K003" maxlength="20" />
+          </div>
+        </div>
+        <div class="form-btns">
+          <button class="btn-cancel-form" id="btnCancelKasir">Batal</button>
+          <button class="btn-submit-form" id="btnSubmitKasir">Tambah Kasir</button>
+        </div>
+      </div>
+
+      <div id="kasirList">
+        <div class="trx-empty">Memuat data kasir...</div>
+      </div>
+    </div>
+
+    <!-- Rekap per kasir minggu ini -->
+    <div class="section-title" style="margin-top:16px;">
+      📊 Performa Kasir Minggu Ini
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="week-table" id="kasirPerfTable">
+          <thead>
+            <tr>
+              <th>Kasir</th>
+              <th class="td-right">Transaksi</th>
+              <th class="td-right">Omzet</th>
+              <th class="td-right">Rata-rata</th>
+            </tr>
+          </thead>
+          <tbody id="kasirPerfBody">
+            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-kasir -->
+
+</div><!-- /page -->
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">Hapus Menu?</div>
+    <div class="modal-body" id="deleteModalBody">Item ini akan dinonaktifkan permanen.</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="deleteCancelBtn">Batal</button>
+      <button class="modal-confirm-del" id="deleteConfirmBtn">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-lg"></div>
+  <div class="loading-text" id="loadingText">Memuat...</div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// CONFIG
+// ══════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec';
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let adminPasskey = '';
+let allMenu = [];
+let pendingDeleteId = null;
+let todayTrx = [];
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  const isAdmin = sessionStorage.getItem('megar_admin');
+  adminPasskey = sessionStorage.getItem('megar_passkey') || '';
+  if (!isAdmin || !adminPasskey) {
+    window.location.href = 'index.html';
+    return;
+  }
+  // Replace history entry supaya tombol back tidak kembali ke halaman ini setelah logout
+  // Push dummy state — tombol back akan hit state ini dulu
+  history.pushState(null, '', window.location.href);
+  history.pushState(null, '', window.location.href);
+  // Block back button
+  window.addEventListener('popstate', () => {
+    if (!sessionStorage.getItem('megar_admin')) {
+      window.location.replace('index.html');
+    } else {
+      history.pushState(null, '', window.location.href);
+    }
+  });
+
+
+  // ── BACK BUTTON HANDLER ──
+  // Tombol back selalu ke login, bukan halaman sebelumnya
+  window.addEventListener('popstate', function() {
+    window.location.replace('index.html');
+  });
+  // Push state agar popstate bisa terpicu
+  history.pushState(null, '', window.location.href);
+
+  const now = new Date();
+  const tgl = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('tglHariIni').textContent = tgl;
+  document.getElementById('trxDate').textContent = tgl;
+
+  showLoading('Memuat data...');
+  await Promise.all([loadMenu(), loadTodayTrx()]);
+  hideLoading();
+  bindEvents();
+});
+
+// ══════════════════════════════════
+// LOAD MENU
+// ══════════════════════════════════
+async function loadMenu() {
+  try {
+    const res = await fetch(`${API_URL}?action=getMenu`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      allMenu = data.menu;
+      updateSummary();
+      // Menu list rendered on demand when Tab Menu is opened
+    }
+  } catch (e) {
+    showToast('Gagal memuat menu', true);
+  }
+}
+
+function renderMenuList() {
+  // Legacy function - tabs use renderMenuList2
+  const list = document.getElementById('menuList');
+  if (!list) return;
+  document.getElementById('menuCount').textContent = allMenu.length + ' item';
+  list.innerHTML = '';
+
+  if (allMenu.length === 0) {
+    list.innerHTML = '<div class="trx-empty">Belum ada menu.</div>';
+    return;
+  }
+
+  allMenu.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `
+      <div class="menu-row-info">
+        <div class="menu-row-name">${item.item}</div>
+        <div class="menu-row-cat">${item.kategori}</div>
+      </div>
+      <div class="menu-row-price ${item.harga_manual ? 'manual-tag' : ''}">
+        ${item.harga_manual ? 'Manual' : formatRp(item.harga)}
+      </div>
+      <div class="menu-row-actions">
+        <label class="row-toggle">
+          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="toggle-aktif" />
+          <div class="toggle-track"></div>
+        </label>
+        <button class="btn-delete" data-id="${item.id}" data-name="${item.item}" title="Hapus">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  // Toggle aktif
+  list.querySelectorAll('.toggle-aktif').forEach(toggle => {
+    toggle.addEventListener('change', async () => {
+      await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: toggle.dataset.id, aktif: toggle.checked });
+      const item = allMenu.find(m => m.id === toggle.dataset.id);
+      if (item) item.aktif = toggle.checked;
+      updateSummary();
+      showToast(toggle.checked ? 'Menu diaktifkan' : 'Menu dinonaktifkan');
+    });
+  });
+
+  // Delete
+  list.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteModalBody').textContent =
+        `"${btn.dataset.name}" akan dihapus dari daftar menu.`;
+      document.getElementById('deleteModal').classList.add('show');
+    });
+  });
+}
+
+function renderArabikaSection() {
+  const arabikaItems = allMenu.filter(m => m.harga_manual === true && m.kategori !== 'Snack');
+  const grid = document.getElementById('arabikaGrid');
+  grid.innerHTML = '';
+
+  if (arabikaItems.length === 0) {
+    grid.innerHTML = '<div style="padding:12px;color:var(--text-faint);font-size:13px;grid-column:1/-1;">Tidak ada item harga manual non-Snack.</div>';
+    return;
+  }
+
+  arabikaItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'arabika-item' + (item.aktif ? ' active-item' : '');
+    div.innerHTML = `
+      <div class="arabika-name">${item.item}</div>
+      <div class="arabika-row">
+        <label class="arabika-toggle">
+          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="arb-toggle" />
+          <div class="toggle-track"></div>
+        </label>
+        <div class="price-input-wrap">
+          <span class="price-prefix">Rp</span>
+          <input class="price-input" type="number" placeholder="0" min="0"
+            value="${item.harga > 0 ? item.harga : ''}"
+            data-id="${item.id}"
+            ${!item.aktif ? 'disabled' : ''}
+          />
+        </div>
+      </div>
+    `;
+    // Toggle enable/disable price input
+    const toggle = div.querySelector('.arb-toggle');
+    const priceInput = div.querySelector('.price-input');
+    toggle.addEventListener('change', () => {
+      priceInput.disabled = !toggle.checked;
+      div.classList.toggle('active-item', toggle.checked);
+    });
+    grid.appendChild(div);
+  });
+}
+
+function updateSummary() {
+  const aktif = allMenu.filter(m => m.aktif).length;
+  document.getElementById('jmlMenuAktif').textContent = aktif + ' / ' + allMenu.length;
+}
+
+// ══════════════════════════════════
+// LOAD TRANSAKSI HARI INI
+// ══════════════════════════════════
+async function loadTodayTrx() {
+  // Transaksi ada di Google Sheets file bulan ini
+  // Kita fetch via Apps Script endpoint getTodayTrx
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${today}`);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      todayTrx = data.transaksi || [];
+      renderTrxList();
+      updateTrxSummary();
+    } else {
+      document.getElementById('trxList').innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
+    }
+  } catch (e) {
+    document.getElementById('trxList').innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
+  }
+}
+
+function renderTrxList() {
+  const list = document.getElementById('trxList');
+  if (todayTrx.length === 0) {
+    list.innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
+    return;
+  }
+
+  // Group by noNota
+  const grouped = {};
+  todayTrx.forEach(row => {
+    if (!grouped[row.noNota]) {
+      grouped[row.noNota] = { noNota: row.noNota, jam: row.jam, kasir: row.kasirNama, items: [], total: row.total, metode: row.metodeBayar };
+    }
+    grouped[row.noNota].items.push(`${row.itemNama} x${row.qty}`);
+  });
+
+  list.innerHTML = '';
+  Object.values(grouped).reverse().forEach(trx => {
+    const div = document.createElement('div');
+    div.className = 'trx-row';
+    div.innerHTML = `
+      <div class="trx-nota">${trx.noNota.split('-').slice(-1)[0]}</div>
+      <div class="trx-info">
+        <div class="trx-items">${trx.items.join(', ')}</div>
+        <div class="trx-meta">${trx.jam} · ${trx.kasir}</div>
+      </div>
+      <div class="trx-total">${formatRp(trx.total)}</div>
+      <div class="trx-metode ${trx.metode}">${trx.metode}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function updateTrxSummary() {
+  const notaSet = new Set(todayTrx.map(r => r.noNota));
+  const omzet = [...notaSet].reduce((sum, nota) => {
+    const row = todayTrx.find(r => r.noNota === nota);
+    return sum + (row ? Number(row.total) : 0);
+  }, 0);
+  document.getElementById('jmlTransaksi').textContent = notaSet.size;
+  document.getElementById('omzetHariIni').textContent = formatRp(omzet);
+}
+
+// ══════════════════════════════════
+// EVENTS
+// ══════════════════════════════════
+function bindEvents() {
+
+  // pageshow fires on back navigation — lebih reliable dari popstate
+  window.addEventListener('pageshow', function(e) {
+    var admin = sessionStorage.getItem('megar_admin');
+    if (!admin) {
+      window.location.replace('index.html');
+    }
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  // Refresh
+  document.getElementById('refreshBtn').addEventListener('click', async () => {
+    showLoading('Memperbarui data...');
+    await Promise.all([loadMenu(), loadTodayTrx()]);
+    hideLoading();
+    showToast('Data diperbarui');
+  });
+
+  // Arabika management moved to Tab Menu
+
+  // Menu management moved to Tab Menu
+
+  // Init tabs
+  initTabs();
+
+  // Transaksi filter events
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('filterTanggal').value = today;
+  document.getElementById('btnToday').addEventListener('click', () => {
+    document.getElementById('filterTanggal').value = today;
+    loadTrxByDate(today);
+  });
+  document.getElementById('btnFilterGo').addEventListener('click', () => {
+    const tgl = document.getElementById('filterTanggal').value;
+    if (!tgl) { showToast('Pilih tanggal dulu', true); return; }
+    loadTrxByDate(tgl);
+  });
+
+  // Weekly refresh
+  document.getElementById('btnRefreshWeek').addEventListener('click', loadWeeklySummary);
+
+  // Kasir add form
+  document.getElementById('btnShowAddKasir').addEventListener('click', () => {
+    document.getElementById('kasirAddForm').classList.toggle('show');
+  });
+  document.getElementById('btnCancelKasir').addEventListener('click', () => {
+    document.getElementById('kasirAddForm').classList.remove('show');
+    document.getElementById('newKasirNama').value = '';
+    document.getElementById('newKasirPasskey').value = '';
+  });
+  document.getElementById('btnSubmitKasir').addEventListener('click', async () => {
+    const nama = document.getElementById('newKasirNama').value.trim();
+    const passkey = document.getElementById('newKasirPasskey').value.trim();
+    if (!nama || !passkey) { showToast('Nama dan passkey wajib diisi', true); return; }
+    const res = await apiPost({ action: 'addKasir', passkey: adminPasskey, nama, kasirPasskey: passkey });
+    if (res && res.status === 'success') {
+      showToast('Kasir "' + nama + '" ditambahkan ✓');
+      document.getElementById('kasirAddForm').classList.remove('show');
+      document.getElementById('newKasirNama').value = '';
+      document.getElementById('newKasirPasskey').value = '';
+      await loadKasirList();
+    } else {
+      showToast(res ? res.message : 'Gagal menambah kasir', true);
+    }
+  });
+
+  // Menu tab 2 events
+  document.getElementById('btnShowAddForm2').addEventListener('click', () => {
+    document.getElementById('addForm2').classList.toggle('show');
+  });
+  document.getElementById('btnCancelAdd2').addEventListener('click', () => {
+    document.getElementById('addForm2').classList.remove('show');
+  });
+  document.getElementById('newItemManual2').addEventListener('change', (e) => {
+    document.getElementById('newItemHarga2').disabled = e.target.checked;
+    if (e.target.checked) document.getElementById('newItemHarga2').value = '';
+  });
+  document.getElementById('btnSubmitAdd2').addEventListener('click', async () => {
+    const nama = document.getElementById('newItemName2').value.trim();
+    const kat = document.getElementById('newItemKat2').value;
+    const harga = parseInt(document.getElementById('newItemHarga2').value) || 0;
+    const isManual = document.getElementById('newItemManual2').checked;
+    if (!nama) { showToast('Nama item wajib diisi', true); return; }
+    if (!isManual && harga <= 0) { showToast('Isi harga item', true); return; }
+    const res = await apiPost({ action: 'addMenuItem', passkey: adminPasskey, kategori: kat, item: nama, harga: isManual ? 0 : harga, harga_manual: isManual });
+    if (res && res.status === 'success') {
+      showToast('Menu ditambahkan ✓');
+      document.getElementById('addForm2').classList.remove('show');
+      document.getElementById('newItemName2').value = '';
+      document.getElementById('newItemHarga2').value = '';
+      await loadMenu();
+      renderMenuList2();
+    } else {
+      showToast('Gagal menambahkan menu', true);
+    }
+  });
+
+  // Set default bulan ke bulan ini
+  const now = new Date();
+  const bulanDefault = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('rekapBulan').value = bulanDefault;
+
+  // Generate rekap
+  document.getElementById('btnGenerateRekap').addEventListener('click', async () => {
+    const bulan = document.getElementById('rekapBulan').value;
+    if (!bulan) { showToast('Pilih bulan terlebih dahulu', true); return; }
+
+    const btn = document.getElementById('btnGenerateRekap');
+    const status = document.getElementById('rekapStatus');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+    status.textContent = '⏳ Sedang generate rekap ' + bulan + '...';
+    status.style.color = 'var(--text-light)';
+
+    try {
+      const res = await fetch(`${API_URL}?action=generateRekap&passkey=${encodeURIComponent(adminPasskey)}&bulan=${bulan}`);
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        status.textContent = '✅ Rekap ' + bulan + ' berhasil dibuat — cek folder Laporan di Google Drive.';
+        status.style.color = 'var(--green-soft)';
+        showToast('Rekap berhasil dibuat ✓');
+      } else {
+        status.textContent = '❌ ' + (data.message || 'Gagal generate rekap');
+        status.style.color = 'var(--error)';
+        showToast('Gagal: ' + data.message, true);
+      }
+    } catch (e) {
+      status.textContent = '❌ Koneksi gagal';
+      status.style.color = 'var(--error)';
+      showToast('Koneksi gagal', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate Rekap';
+    }
+  });
+
+  // Delete modal
+  document.getElementById('deleteCancelBtn').addEventListener('click', () => {
+    document.getElementById('deleteModal').classList.remove('show');
+    pendingDeleteId = null;
+  });
+  document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    document.getElementById('deleteModal').classList.remove('show');
+
+    const res = await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: pendingDeleteId, aktif: false });
+    if (res && res.status === 'success') {
+      showToast('Menu dihapus');
+      await loadMenu();
+    } else {
+      showToast('Gagal menghapus menu', true);
+    }
+    pendingDeleteId = null;
+  });
+}
+
+// ══════════════════════════════════
+// HELPERS
+// ══════════════════════════════════
+async function apiPost(body) {
+  try {
+    const payload = encodeURIComponent(JSON.stringify(body));
+    const res = await fetch(`${API_URL}?payload=${payload}`);
+    return await res.json();
+  } catch (e) {
+    showToast('Koneksi gagal', true);
+    return null;
+  }
+}
+
+function clearAddForm() {
+  document.getElementById('newItemName').value = '';
+  document.getElementById('newItemHarga').value = '';
+  document.getElementById('newItemHarga').disabled = false;
+  document.getElementById('newItemManual').checked = false;
+}
+
+function formatRp(num) {
+  return 'Rp ' + Number(num).toLocaleString('id-ID');
+}
+
+function showToast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { el.className = 'toast'; }, 2800);
+}
+
+function showLoading(msg = 'Memuat...') {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+// ══════════════════════════════════
+// NAV TABS
+// ══════════════════════════════════
+function initTabs() {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+
+      // Lazy load tab content
+      if (tab.dataset.tab === 'mingguan') loadWeeklySummary();
+      if (tab.dataset.tab === 'kasir') loadKasirList();
+      if (tab.dataset.tab === 'menu') {
+        renderMenuList2();
+        renderArabikaSection2();
+      }
+      if (tab.dataset.tab === 'transaksi') {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('filterTanggal').value = today;
+        loadTrxByDate(today);
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════
+// TRANSAKSI FILTER
+// ══════════════════════════════════
+async function loadTrxByDate(tanggal) {
+  const list = document.getElementById('trxListFilter');
+  list.innerHTML = '<div class="trx-empty">Memuat...</div>';
+  document.getElementById('kasirSummaryList').innerHTML = '';
+
+  try {
+    const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`);
+    const data = await res.json();
+    const trx = data.transaksi || [];
+
+    const label = tanggal === new Date().toISOString().split('T')[0]
+      ? 'hari ini' : tanggal;
+    document.getElementById('trxFilterLabel').textContent = label;
+
+    if (trx.length === 0) {
+      list.innerHTML = '<div class="trx-empty">Tidak ada transaksi pada tanggal ini.</div>';
+      return;
+    }
+
+    // Group by nota
+    const grouped = {};
+    const kasirMap = {};
+    trx.forEach(row => {
+      if (!grouped[row.noNota]) {
+        grouped[row.noNota] = { noNota: row.noNota, jam: row.jam, kasir: row.kasirNama, items: [], total: row.total, metode: row.metodeBayar };
+      }
+      grouped[row.noNota].items.push(`${row.itemNama} x${row.qty}`);
+      if (!kasirMap[row.kasirNama]) kasirMap[row.kasirNama] = { trx: new Set(), omzet: 0 };
+      kasirMap[row.kasirNama].trx.add(row.noNota);
+    });
+
+    // Rekap per kasir
+    const kasirSummary = document.getElementById('kasirSummaryList');
+    Object.entries(kasirMap).forEach(([nama, d]) => {
+      const omzet = [...d.trx].reduce((s, nota) => {
+        const row = trx.find(r => r.noNota === nota);
+        return s + (row ? Number(row.total) : 0);
+      }, 0);
+      const chip = document.createElement('div');
+      chip.style.cssText = 'background:var(--green-pale);border:1px solid var(--green-light);border-radius:20px;padding:5px 12px;font-size:12px;';
+      chip.innerHTML = `<strong>${nama}</strong> · ${d.trx.size} trx · ${formatRp(omzet)}`;
+      kasirSummary.appendChild(chip);
+    });
+
+    // Render list
+    list.innerHTML = '';
+    Object.values(grouped).reverse().forEach(trx => {
+      const div = document.createElement('div');
+      div.className = 'trx-row';
+      div.innerHTML = `
+        <div class="trx-nota">${trx.noNota.split('-').slice(-1)[0]}</div>
+        <div class="trx-info">
+          <div class="trx-items">${trx.items.join(', ')}</div>
+          <div class="trx-meta">${trx.jam} · ${trx.kasir}</div>
+        </div>
+        <div class="trx-total">${formatRp(trx.total)}</div>
+        <div class="trx-metode ${trx.metode}">${trx.metode}</div>
+      `;
+      list.appendChild(div);
+    });
+
+  } catch(e) {
+    list.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
+  }
+}
+
+// ══════════════════════════════════
+// WEEKLY SUMMARY
+// ══════════════════════════════════
+async function loadWeeklySummary() {
+  const tbody = document.getElementById('weekTableBody');
+  const topMenu = document.getElementById('weekTopMenu');
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat...</td></tr>';
+  topMenu.innerHTML = '<div class="trx-empty">Memuat...</div>';
+
+  // Generate last 7 days
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+
+  const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  let weekOmzet = 0, weekTrxTotal = 0;
+  let bestDay = { omzet: 0, tgl: '' };
+  const itemMap = {};
+  const rows = [];
+
+  for (const tgl of days) {
+    try {
+      const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tgl}`);
+      const data = await res.json();
+      const trx = data.transaksi || [];
+
+      const notaSet = new Set(trx.map(r => r.noNota));
+      const omzet = [...notaSet].reduce((s, nota) => {
+        const row = trx.find(r => r.noNota === nota);
+        return s + (row ? Number(row.total) : 0);
+      }, 0);
+
+      trx.forEach(r => {
+        if (!itemMap[r.itemNama]) itemMap[r.itemNama] = { qty: 0, omzet: 0 };
+        itemMap[r.itemNama].qty += Number(r.qty);
+        itemMap[r.itemNama].omzet += Number(r.subtotal);
+      });
+
+      weekOmzet += omzet;
+      weekTrxTotal += notaSet.size;
+      if (omzet > bestDay.omzet) bestDay = { omzet: omzet, tgl: tgl };
+
+      const d = new Date(tgl + 'T00:00:00');
+      rows.push({ tgl, hari: dayNames[d.getDay()], trx: notaSet.size, omzet });
+    } catch(e) {
+      rows.push({ tgl, hari: '—', trx: 0, omzet: 0 });
+    }
+  }
+
+  // Update summary cards
+  document.getElementById('weekOmzet').textContent = formatRp(weekOmzet);
+  document.getElementById('weekTrx').textContent = weekTrxTotal;
+  const bestDate = bestDay.tgl ? new Date(bestDay.tgl + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short' }) : '—';
+  document.getElementById('weekBest').textContent = bestDay.tgl ? `${bestDate} · ${formatRp(bestDay.omzet)}` : '—';
+
+  // Table
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const isToday = r.tgl === new Date().toISOString().split('T')[0];
+    tr.innerHTML = `
+      <td>${new Date(r.tgl + 'T00:00:00').toLocaleDateString('id-ID', {day:'numeric',month:'short'})}${isToday ? ' <span style="font-size:9px;background:var(--green-pale);color:var(--green-mid);padding:1px 5px;border-radius:4px;">hari ini</span>' : ''}</td>
+      <td>${r.hari}</td>
+      <td class="td-right">${r.trx}</td>
+      <td class="td-num">${r.omzet > 0 ? formatRp(r.omzet) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Top menu
+  const sorted = Object.entries(itemMap).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
+  if (sorted.length === 0) {
+    topMenu.innerHTML = '<div class="trx-empty">Belum ada data minggu ini.</div>';
+  } else {
+    topMenu.innerHTML = '';
+    sorted.forEach(([nama, d], i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;padding:9px 16px;border-bottom:1px solid var(--green-pale);gap:10px;';
+      div.innerHTML = `
+        <div style="width:22px;height:22px;background:var(--green-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--green-mid);flex-shrink:0;">${i+1}</div>
+        <div style="flex:1;font-size:13px;font-weight:500;">${nama}</div>
+        <div style="font-size:12px;color:var(--text-light);">${d.qty} pcs</div>
+        <div style="font-size:12px;font-weight:600;color:var(--green-mid);">${formatRp(d.omzet)}</div>
+      `;
+      topMenu.appendChild(div);
+    });
+  }
+
+  // Kasir performance
+  await loadKasirPerf(days);
+}
+
+async function loadKasirPerf(days) {
+  const tbody = document.getElementById('kasirPerfBody');
+  const kasirMap = {};
+
+  for (const tgl of days) {
+    try {
+      const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tgl}`);
+      const data = await res.json();
+      const trx = data.transaksi || [];
+      const notaSet = {};
+      trx.forEach(r => {
+        if (!notaSet[r.noNota]) {
+          notaSet[r.noNota] = { kasir: r.kasirNama, total: Number(r.total) };
+        }
+      });
+      Object.values(notaSet).forEach(({ kasir, total }) => {
+        if (!kasirMap[kasir]) kasirMap[kasir] = { trx: 0, omzet: 0 };
+        kasirMap[kasir].trx++;
+        kasirMap[kasir].omzet += total;
+      });
+    } catch(e) {}
+  }
+
+  tbody.innerHTML = '';
+  if (Object.keys(kasirMap).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-faint);">Belum ada data.</td></tr>';
+    return;
+  }
+  Object.entries(kasirMap).sort((a,b) => b[1].omzet - a[1].omzet).forEach(([nama, d]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${nama}</strong></td>
+      <td class="td-right">${d.trx}</td>
+      <td class="td-num">${formatRp(d.omzet)}</td>
+      <td class="td-right" style="color:var(--text-light)">${formatRp(Math.round(d.omzet/d.trx))}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════
+// KASIR MANAGEMENT
+// ══════════════════════════════════
+async function loadKasirList() {
+  const list = document.getElementById('kasirList');
+  list.innerHTML = '<div class="trx-empty">Memuat...</div>';
+
+  try {
+    const payload = encodeURIComponent(JSON.stringify({ action: 'getKasirList', passkey: adminPasskey }));
+    const res = await fetch(`${API_URL}?payload=${payload}`);
+    const data = await res.json();
+
+    if (data.status !== 'success' || !data.kasir.length) {
+      list.innerHTML = '<div class="trx-empty">Belum ada data kasir.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    data.kasir.forEach(k => {
+      const row = document.createElement('div');
+      row.className = 'kasir-row';
+      const initial = k.nama.charAt(0).toUpperCase();
+      row.innerHTML = `
+        <div class="kasir-avatar">${initial}</div>
+        <div class="kasir-info">
+          <div class="kasir-name">${k.nama}</div>
+          <div class="kasir-id">${k.id}</div>
+        </div>
+        <span class="kasir-passkey" data-passkey="${k.passkey}" title="Tap untuk lihat passkey">••••••</span>
+        <label class="row-toggle">
+          <input type="checkbox" ${k.aktif ? 'checked' : ''} data-id="${k.id}" class="kasir-toggle-aktif" />
+          <div class="toggle-track"></div>
+        </label>
+      `;
+      // Reveal passkey on tap
+      const pkEl = row.querySelector('.kasir-passkey');
+      pkEl.addEventListener('click', () => {
+        if (pkEl.classList.contains('revealed')) {
+          pkEl.textContent = '••••••';
+          pkEl.classList.remove('revealed');
+        } else {
+          pkEl.textContent = pkEl.dataset.passkey;
+          pkEl.classList.add('revealed');
+        }
+      });
+      // Toggle aktif
+      row.querySelector('.kasir-toggle-aktif').addEventListener('change', async (e) => {
+        const res = await apiPost({ action: 'toggleKasir', passkey: adminPasskey, id: e.target.dataset.id, aktif: e.target.checked });
+        showToast(e.target.checked ? k.nama + ' diaktifkan' : k.nama + ' dinonaktifkan');
+      });
+      list.appendChild(row);
+    });
+  } catch(e) {
+    list.innerHTML = '<div class="trx-empty">Gagal memuat.</div>';
+  }
+}
+
+// ══════════════════════════════════
+// MENU TAB (duplicate for menu tab)
+// ══════════════════════════════════
+function renderMenuList2() {
+  const list = document.getElementById('menuList2');
+  document.getElementById('menuCount2').textContent = allMenu.length + ' item';
+  list.innerHTML = '';
+  if (allMenu.length === 0) {
+    list.innerHTML = '<div class="trx-empty">Belum ada menu.</div>';
+    return;
+  }
+  allMenu.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `
+      <div class="menu-row-info">
+        <div class="menu-row-name">${item.item}</div>
+        <div class="menu-row-cat">${item.kategori}</div>
+      </div>
+      <div class="menu-row-price ${item.harga_manual ? 'manual-tag' : ''}">
+        ${item.harga_manual ? 'Manual' : formatRp(item.harga)}
+      </div>
+      <div class="menu-row-actions">
+        <label class="row-toggle">
+          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="toggle-aktif2" />
+          <div class="toggle-track"></div>
+        </label>
+        <button class="btn-delete" data-id="${item.id}" data-name="${item.item}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.toggle-aktif2').forEach(toggle => {
+    toggle.addEventListener('change', async () => {
+      await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: toggle.dataset.id, aktif: toggle.checked });
+      const item = allMenu.find(m => m.id === toggle.dataset.id);
+      if (item) item.aktif = toggle.checked;
+      updateSummary();
+      showToast(toggle.checked ? 'Menu diaktifkan' : 'Menu dinonaktifkan');
+    });
+  });
+  list.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteModalBody').textContent = `"${btn.dataset.name}" akan dihapus.`;
+      document.getElementById('deleteModal').classList.add('show');
+    });
+  });
+}
+
+function renderArabikaSection2() {
+  const arabikaItems = allMenu.filter(m => m.harga_manual === true && m.kategori !== 'Snack');
+  const grid = document.getElementById('arabikaGrid2');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (arabikaItems.length === 0) {
+    grid.innerHTML = '<div style="padding:12px;color:var(--text-faint);font-size:13px;grid-column:1/-1;">Tidak ada item harga manual non-Snack.</div>';
+    return;
+  }
+  arabikaItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'arabika-item' + (item.aktif ? ' active-item' : '');
+    div.innerHTML = `
+      <div class="arabika-name">${item.item}</div>
+      <div class="arabika-row">
+        <label class="arabika-toggle">
+          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="arb-toggle2" />
+          <div class="toggle-track"></div>
+        </label>
+        <div class="price-input-wrap">
+          <span class="price-prefix">Rp</span>
+          <input class="price-input" type="number" placeholder="0" min="0"
+            value="${item.harga > 0 ? item.harga : ''}"
+            data-id="${item.id}" ${!item.aktif ? 'disabled' : ''} />
+        </div>
+      </div>
+    `;
+    const toggle = div.querySelector('.arb-toggle2');
+    const priceInput = div.querySelector('.price-input');
+    toggle.addEventListener('change', () => {
+      priceInput.disabled = !toggle.checked;
+      div.classList.toggle('active-item', toggle.checked);
+    });
+    grid.appendChild(div);
+  });
+
+  document.getElementById('arabikaBtn2').onclick = async () => {
+    const toggles = document.querySelectorAll('.arb-toggle2');
+    let valid = true;
+    const updates = [];
+    toggles.forEach(toggle => {
+      const harga = parseInt(toggle.closest('.arabika-item').querySelector('.price-input').value) || 0;
+      if (toggle.checked && harga <= 0) valid = false;
+      updates.push({ id: toggle.dataset.id, aktif: toggle.checked, harga });
+    });
+    if (!valid) { showToast('Isi harga untuk item yang diaktifkan', true); return; }
+    for (const u of updates) {
+      await apiPost({ action: 'updateDailyPrice', passkey: adminPasskey, id: u.id, harga: u.harga });
+      await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: u.id, aktif: u.aktif });
+    }
+    showToast('Harga Arabika disimpan ✓');
+    await loadMenu();
+  };
+}
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>

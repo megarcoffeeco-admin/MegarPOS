@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Megar POS" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#2d4a2d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Megar — Coffee & Co</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1e3a1e;
+      --green-mid:    #2d4a2d;
+      --green-soft:   #4a7c4a;
+      --green-light:  #7aab6e;
+      --cream:        #f5f0e8;
+      --cream-dark:   #e8e0d0;
+      --warm-white:   #fdfaf5;
+      --brown-accent: #8b6340;
+      --text-dark:    #1a2e1a;
+      --text-mid:     #3d5c3d;
+      --text-light:   #7a9a7a;
+      --error:        #c0392b;
+      --shadow-green: rgba(30, 58, 30, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--green-deep);
+      overflow: hidden;
+    }
+
+    /* ── Background texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(74,124,74,0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 85% 90%, rgba(45,74,45,0.5) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 40% at 60% 40%, rgba(122,171,110,0.12) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+    }
+
+    /* ── Leaf decorations ── */
+    .leaf {
+      position: fixed;
+      opacity: 0.07;
+      pointer-events: none;
+    }
+    .leaf-1 {
+      top: -40px; right: -30px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, var(--green-light), transparent 70%);
+      border-radius: 50%;
+      animation: float1 8s ease-in-out infinite;
+    }
+    .leaf-2 {
+      bottom: -60px; left: -40px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, var(--green-soft), transparent 70%);
+      border-radius: 50%;
+      animation: float2 10s ease-in-out infinite;
+    }
+    @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-10px,15px) scale(1.05)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(12px,-10px) scale(1.04)} }
+
+    /* ── Card ── */
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(253, 250, 245, 0.96);
+      border-radius: 28px;
+      padding: 40px 32px 36px;
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.35),
+        0 2px 0 rgba(255,255,255,0.6) inset;
+      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(32px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Logo area ── */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(145deg, var(--green-mid), var(--green-soft));
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px var(--shadow-green);
+      animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+    }
+    @keyframes iconPop {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .logo-icon svg { width: 36px; height: 36px; }
+
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-dark);
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .brand-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-light);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── Form ── */
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-mid);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .passkey-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .passkey-input {
+      width: 100%;
+      padding: 16px 52px 16px 18px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-dark);
+      background: var(--warm-white);
+      letter-spacing: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .passkey-input:focus {
+      outline: none;
+      border-color: var(--green-soft);
+      box-shadow: 0 0 0 4px rgba(74,124,74,0.12);
+    }
+    .passkey-input::placeholder {
+      letter-spacing: 1px;
+      color: #bbb;
+      font-weight: 300;
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+    .toggle-visibility:hover { color: var(--green-soft); }
+
+    .error-msg {
+      font-size: 12px;
+      color: var(--error);
+      margin-bottom: 16px;
+      min-height: 18px;
+      padding-left: 4px;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .error-msg.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Login Button ── */
+    .btn-login {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(145deg, var(--green-mid), var(--green-soft));
+      color: var(--cream);
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 6px 20px var(--shadow-green);
+    }
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px var(--shadow-green);
+    }
+    .btn-login:active { transform: translateY(1px); }
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-login .btn-text { transition: opacity 0.2s; }
+    .btn-login .btn-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-login.loading .btn-text { opacity: 0; }
+    .btn-login.loading .btn-loader { opacity: 1; }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Admin link ── */
+    .admin-link {
+      text-align: center;
+      margin-top: 24px;
+    }
+    .admin-link button {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-light);
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .admin-link button:hover { color: var(--green-soft); }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.5px;
+      animation: fadeIn 1s ease 0.8s both;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* ── Success state ── */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--green-mid);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .success-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .success-icon {
+      width: 72px; height: 72px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes popIn {
+      from{transform:scale(0)} to{transform:scale(1)}
+    }
+    .success-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .success-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: rgba(245,240,232,0.6);
+      letter-spacing: 1px;
+    }
+
+    /* ── Responsive tablet ── */
+    @media (min-width: 600px) {
+      .card { padding: 48px 44px 42px; }
+      .brand-name { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="leaf leaf-1"></div>
+<div class="leaf leaf-2"></div>
+
+<div class="wrapper">
+  <div class="card">
+
+    <div class="logo-area">
+      <div class="logo-icon">
+        <!-- Coffee leaf SVG icon -->
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6C14 6 8 10 8 18C8 24 12 29 18 30C24 29 28 24 28 18C28 10 22 6 18 6Z" fill="rgba(245,240,232,0.9)"/>
+          <path d="M18 10C18 10 18 20 18 28" stroke="rgba(45,74,45,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M18 14C18 14 14 12 12 15" stroke="rgba(45,74,45,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M18 19C18 19 22 17 24 20" stroke="rgba(45,74,45,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="18" cy="8" r="2" fill="rgba(139,99,64,0.7)"/>
+        </svg>
+      </div>
+      <div class="brand-name">Megar</div>
+      <div class="brand-sub">Coffee &amp; Co</div>
+    </div>
+
+    <label class="form-label" for="passkey">Passkey</label>
+    <div class="passkey-wrapper">
+      <input
+        id="passkey"
+        class="passkey-input"
+        type="password"
+        placeholder="Masukkan passkey kamu"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        maxlength="20"
+      />
+      <button class="toggle-visibility" id="toggleBtn" type="button" aria-label="Toggle visibility">
+        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="error-msg" id="errorMsg">Passkey salah atau akun tidak aktif.</div>
+
+    <button class="btn-login" id="loginBtn" type="button">
+      <span class="btn-text">Masuk</span>
+      <span class="btn-loader"><div class="spinner"></div></span>
+    </button>
+
+    <div class="admin-link">
+      <button id="adminBtn" type="button">Masuk sebagai Admin</button>
+    </div>
+
+  </div>
+
+  <div class="footer">POS Megar v1.0 &nbsp;·&nbsp; 2025</div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-name" id="successName">Halo, Kasir!</div>
+  <div class="success-sub" id="successSub">Selamat bekerja ☕</div>
+</div>
+
+<script>
+  // ── CONFIG ──
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec';
+
+  // ── ELEMENTS ──
+  const passkeyInput = document.getElementById('passkey');
+  const loginBtn     = document.getElementById('loginBtn');
+  const adminBtn     = document.getElementById('adminBtn');
+  const errorMsg     = document.getElementById('errorMsg');
+  const toggleBtn    = document.getElementById('toggleBtn');
+  const successOverlay = document.getElementById('successOverlay');
+  const successName  = document.getElementById('successName');
+  const successSub   = document.getElementById('successSub');
+
+
+  // ── BACK BUTTON HANDLER ──
+  history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', function() {
+    history.pushState(null, '', window.location.href);
+  });
+
+  // ── TOGGLE PASSWORD VISIBILITY ──
+  toggleBtn.addEventListener('click', () => {
+    const isHidden = passkeyInput.type === 'password';
+    passkeyInput.type = isHidden ? 'text' : 'password';
+    document.getElementById('eyeIcon').innerHTML = isHidden
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  });
+
+  // ── ENTER KEY ──
+  passkeyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loginBtn.click();
+  });
+
+  // ── CLEAR ERROR ON TYPE ──
+  passkeyInput.addEventListener('input', () => {
+    errorMsg.classList.remove('visible');
+  });
+
+  // ── LOGIN ──
+  loginBtn.addEventListener('click', async () => {
+    const passkey = passkeyInput.value.trim();
+    if (!passkey) {
+      showError('Passkey tidak boleh kosong.');
+      passkeyInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}?action=login&passkey=${encodeURIComponent(passkey)}`);
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        // Simpan sesi
+        sessionStorage.setItem('megar_kasir', JSON.stringify(data.kasir));
+        sessionStorage.setItem('megar_passkey', passkey);
+
+        // Tampilkan success
+        successName.textContent = `Halo, ${data.kasir.nama}!`;
+        successSub.textContent = 'Selamat bekerja ☕';
+        successOverlay.classList.add('show');
+
+        // Redirect ke halaman transaksi setelah 1.8 detik
+        setTimeout(() => {
+          window.location.href = 'pos-megar-transaksi.html';
+        }, 1800);
+
+      } else {
+        showError(data.message || 'Passkey salah atau akun tidak aktif.');
+        passkeyInput.value = '';
+        passkeyInput.focus();
+      }
+
+    } catch (err) {
+      showError('Gagal terhubung ke server. Periksa koneksi internet.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── ADMIN LOGIN ──
+  adminBtn.addEventListener('click', async () => {
+    const passkey = passkeyInput.value.trim();
+    if (!passkey) {
+      showError('Masukkan passkey admin terlebih dahulu.');
+      passkeyInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}?action=getAdminPasskey&passkey=${encodeURIComponent(passkey)}`);
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        sessionStorage.setItem('megar_admin', 'true');
+        sessionStorage.setItem('megar_passkey', passkey);
+
+        successName.textContent = 'Halo, Admin!';
+        successSub.textContent = 'Dashboard siap digunakan 🌿';
+        successOverlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = 'pos-megar-admin.html';
+        }, 1800);
+
+      } else {
+        showError(data.message || 'Passkey admin salah.');
+        passkeyInput.value = '';
+        passkeyInput.focus();
+      }
+
+    } catch (err) {
+      showError('Gagal terhubung ke server. Periksa koneksi internet.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── HELPERS ──
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('visible');
+    passkeyInput.style.borderColor = 'var(--error)';
+    setTimeout(() => { passkeyInput.style.borderColor = ''; }, 2000);
+  }
+
+  function setLoading(state) {
+    loginBtn.disabled = state;
+    loginBtn.classList.toggle('loading', state);
+  }
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>

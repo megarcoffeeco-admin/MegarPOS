@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+<script>
+  // SECURITY GUARD — runs before anything else
+  // Fired even when page restored from cache via back button
+  (function() {
+    var kasir = sessionStorage.getItem('megar_kasir');
+    var pk = sessionStorage.getItem('megar_passkey');
+    if (!kasir || !pk) {
+      window.location.replace('index.html');
+    }
+  })();
+</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Megar POS" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1e3a1e" />
+  <title>Transaksi — Megar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1e3a1e;
+      --green-mid:    #2d4a2d;
+      --green-soft:   #4a7c4a;
+      --green-light:  #7aab6e;
+      --green-pale:   #e8f2e8;
+      --green-pale2:  #f0f7f0;
+      --cream:        #f5f0e8;
+      --cream-dark:   #e8e0d0;
+      --warm-white:   #fdfaf5;
+      --brown:        #8b6340;
+      --text-dark:    #1a2e1a;
+      --text-mid:     #3d5c3d;
+      --text-light:   #7a9a7a;
+      --text-faint:   #aac4aa;
+      --error:        #c0392b;
+      --error-light:  #fdecea;
+      --shadow:       rgba(30,58,30,0.12);
+      --radius-card:  16px;
+      --radius-btn:   12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--green-pale2);
+      color: var(--text-dark);
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════
+       LAYOUT — 2 kolom di tablet, 1 kolom di HP
+    ══════════════════════════════ */
+    .app {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: var(--green-deep);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--cream);
+      font-weight: 700;
+    }
+    .topbar-kasir {
+      font-size: 11px;
+      color: var(--green-light);
+      letter-spacing: 0.5px;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.08);
+      border: none;
+      border-radius: 10px;
+      color: var(--cream);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── Main area ── */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      gap: 0;
+    }
+
+    /* ── Left: Menu Panel ── */
+    .menu-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--warm-white);
+    }
+
+    /* Category tabs */
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 12px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--cream-dark);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .cat-tab.active {
+      background: var(--green-mid);
+      border-color: var(--green-mid);
+      color: white;
+    }
+
+    /* Menu grid */
+    .menu-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      align-content: start;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cream-dark) transparent;
+    }
+
+    .menu-item {
+      background: white;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: var(--radius-btn);
+      padding: 12px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 72px;
+    }
+    .menu-item:hover {
+      border-color: var(--green-soft);
+      background: var(--green-pale);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .menu-item:active { transform: scale(0.97); }
+    .menu-item.has-qty {
+      border-color: var(--green-soft);
+      background: var(--green-pale);
+    }
+    .menu-item.manual-price {
+      border-style: dashed;
+      border-color: var(--brown);
+    }
+
+    .item-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dark);
+      line-height: 1.3;
+    }
+    .item-price {
+      font-size: 12px;
+      color: var(--text-mid);
+      font-weight: 400;
+    }
+    .item-price.manual {
+      color: var(--brown);
+      font-style: italic;
+      font-size: 11px;
+    }
+    .item-badge {
+      position: absolute;
+      top: 6px; right: 6px;
+      background: var(--green-mid);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Right: Order Panel ── */
+    .order-panel {
+      width: 0;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--warm-white);
+      border-left: 1px solid var(--cream-dark);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+    }
+
+    /* Tablet: order panel always visible */
+    /* ── Offline indicator ── */
+    .offline-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(192,57,43,0.15);
+      border: 1px solid rgba(192,57,43,0.4);
+      border-radius: 20px;
+      padding: 5px 10px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .offline-dot {
+      width: 7px; height: 7px;
+      background: #e74c3c;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .offline-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #e74c3c;
+      letter-spacing: 0.3px;
+    }
+    .offline-count {
+      font-size: 10px;
+      color: rgba(231,76,60,0.8);
+    }
+
+    .sync-success-banner {
+      position: fixed;
+      top: 70px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--green-deep);
+      color: white;
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+      z-index: 100;
+      text-align: center;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+      pointer-events: none;
+      min-width: 220px;
+    }
+    .sync-success-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .sync-success-banner .sync-icon {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    @media (min-width: 600px) {
+      .order-panel {
+        width: 300px !important;
+      }
+      .cart-fab { display: none !important; }
+    }
+
+    .order-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--cream-dark);
+      flex-shrink: 0;
+    }
+    .order-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+    .order-kasir-tag {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
+    /* Order items list */
+    .order-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cream-dark) transparent;
+    }
+    .order-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-faint);
+      gap: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .order-empty svg { opacity: 0.3; }
+    .order-empty p { font-size: 13px; }
+
+    .order-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 14px;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .order-item-info { flex: 1; min-width: 0; }
+    .order-item-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-item-price { font-size: 11px; color: var(--text-light); }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .qty-btn {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      border: 1.5px solid var(--cream-dark);
+      background: white;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-mid);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+    .qty-btn:hover { border-color: var(--green-soft); color: var(--green-soft); }
+    .qty-btn.minus:hover { border-color: var(--error); color: var(--error); }
+    .qty-num {
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+    }
+    .order-item-subtotal {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-mid);
+      min-width: 56px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Notes input */
+    .notes-area {
+      padding: 10px 14px;
+      border-top: 1px solid var(--cream-dark);
+      flex-shrink: 0;
+    }
+    .notes-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-light);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .notes-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-dark);
+      background: var(--warm-white);
+      resize: none;
+      height: 54px;
+      transition: border-color 0.2s;
+    }
+    .notes-input:focus {
+      outline: none;
+      border-color: var(--green-soft);
+    }
+    .notes-input::placeholder { color: var(--text-faint); }
+
+    /* Order footer */
+    .order-footer {
+      padding: 12px 14px;
+      border-top: 1.5px solid var(--cream-dark);
+      background: white;
+      flex-shrink: 0;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .total-label {
+      font-size: 13px;
+      color: var(--text-mid);
+      font-weight: 400;
+    }
+    .total-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+
+    /* Metode bayar */
+    .metode-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .metode-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .metode-btn.active {
+      background: var(--green-pale);
+      border-color: var(--green-soft);
+      color: var(--green-mid);
+      font-weight: 600;
+    }
+
+    .btn-bayar {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(145deg, var(--green-mid), var(--green-soft));
+      color: white;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px var(--shadow);
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-bayar:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--shadow); }
+    .btn-bayar:active { transform: translateY(1px); }
+    .btn-bayar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-bayar .btn-text { transition: opacity 0.2s; }
+    .btn-bayar .btn-loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .btn-bayar.loading .btn-text { opacity: 0; }
+    .btn-bayar.loading .btn-loader { opacity: 1; }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Cart FAB (HP only) ── */
+    .cart-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px; height: 56px;
+      background: var(--green-mid);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      z-index: 20;
+      transition: transform 0.2s;
+    }
+    .cart-fab:active { transform: scale(0.92); }
+    .cart-fab-badge {
+      position: absolute;
+      top: -2px; right: -2px;
+      background: var(--brown);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px; height: 20px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+      display: none;
+    }
+    .cart-fab-badge.show { display: flex; }
+
+    /* ── Order drawer (HP) ── */
+    .order-drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 30;
+      animation: fadeIn 0.2s ease;
+    }
+    .order-drawer-overlay.show { display: block; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .order-drawer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--warm-white);
+      border-radius: 24px 24px 0 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      max-height: 85dvh;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .order-drawer.show { transform: translateY(0); }
+
+    .drawer-handle {
+      width: 36px; height: 4px;
+      background: var(--cream-dark);
+      border-radius: 2px;
+      margin: 12px auto 0;
+      flex-shrink: 0;
+    }
+    .drawer-content {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Manual price modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 340px;
+      animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+    .modal-sub {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-dark);
+      text-align: center;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .modal-input:focus { outline: none; border-color: var(--green-soft); }
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-cancel {
+      flex: 1;
+      padding: 13px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-mid);
+      cursor: pointer;
+    }
+    .modal-confirm {
+      flex: 2;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: var(--green-mid);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* ── Success toast ── */
+    .toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--green-deep);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Success screen ── */
+    .success-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--green-mid);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .success-screen.show { opacity: 1; pointer-events: all; }
+    .success-circle {
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 8px;
+    }
+    .success-nota {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      color: var(--green-light);
+      letter-spacing: 1px;
+    }
+    .success-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: white;
+    }
+    .success-metode {
+      font-size: 13px;
+      color: rgba(245,240,232,0.6);
+      margin-top: -4px;
+    }
+    .success-wa-btn {
+      margin-top: 16px;
+      padding: 12px 28px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .success-nota-btn {
+      margin-top: 8px;
+      padding: 12px 28px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .success-next-btn {
+      margin-top: 8px;
+      padding: 12px 28px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(245,240,232,0.8);
+      border: none;
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    @media (min-width: 600px) {
+      .menu-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-brand">Megar</div>
+        <div class="topbar-kasir" id="kasirLabel">Memuat...</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="offline-indicator" id="offlineIndicator" style="display:none;">
+        <span class="offline-dot"></span>
+        <span class="offline-label">Offline</span>
+        <span class="offline-count" id="offlineCount"></span>
+      </div>
+      <button class="btn-icon" id="syncBtn" title="Sync transaksi pending" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="logoutBtn" title="Logout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Menu Panel -->
+    <div class="menu-panel">
+      <div class="cat-tabs" id="catTabs">
+        <button class="cat-tab active" data-cat="Semua">Semua</button>
+      </div>
+      <div class="menu-grid" id="menuGrid">
+        <!-- diisi JS -->
+      </div>
+    </div>
+
+    <!-- Order Panel (tablet) -->
+    <div class="order-panel" id="orderPanel">
+      <div class="order-header">
+        <div class="order-title">Pesanan</div>
+        <div class="order-kasir-tag" id="orderKasirTag"></div>
+      </div>
+      <div class="order-list" id="orderList">
+        <div class="order-empty" id="orderEmpty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <p>Belum ada pesanan</p>
+        </div>
+      </div>
+      <div class="notes-area">
+        <div class="notes-label">Catatan</div>
+        <textarea class="notes-input" id="notesInput" placeholder="Catatan khusus pelanggan..."></textarea>
+      </div>
+      <div class="order-footer">
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-amount" id="totalAmount">Rp 0</span>
+        </div>
+        <div class="metode-group" id="metodeGroup">
+          <button class="metode-btn active" data-metode="Tunai">💵 Tunai</button>
+          <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
+          <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
+        </div>
+        <button class="btn-bayar" id="btnBayar" disabled>
+          <span class="btn-text">Bayar</span>
+          <span class="btn-loader"><div class="spinner"></div></span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Cart FAB (HP only) -->
+<button class="cart-fab" id="cartFab">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+  </svg>
+  <span class="cart-fab-badge" id="cartBadge">0</span>
+</button>
+
+<!-- Order Drawer (HP) -->
+<div class="order-drawer-overlay" id="drawerOverlay"></div>
+<div class="order-drawer" id="orderDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-content">
+    <div class="order-header">
+      <div class="order-title">Pesanan</div>
+      <div class="order-kasir-tag" id="drawerKasirTag"></div>
+    </div>
+    <div class="order-list" id="drawerList">
+      <div class="order-empty" id="drawerEmpty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <p>Belum ada pesanan</p>
+      </div>
+    </div>
+    <div class="notes-area">
+      <div class="notes-label">Catatan</div>
+      <textarea class="notes-input" id="drawerNotesInput" placeholder="Catatan khusus pelanggan..."></textarea>
+    </div>
+    <div class="order-footer">
+      <div class="total-row">
+        <span class="total-label">Total</span>
+        <span class="total-amount" id="drawerTotal">Rp 0</span>
+      </div>
+      <div class="metode-group" id="drawerMetodeGroup">
+        <button class="metode-btn active" data-metode="Tunai">💵 Tunai</button>
+        <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
+        <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
+      </div>
+      <button class="btn-bayar" id="drawerBtnBayar" disabled>
+        <span class="btn-text">Bayar</span>
+        <span class="btn-loader"><div class="spinner"></div></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Manual Price Modal -->
+<div class="modal-overlay" id="manualModal">
+  <div class="modal">
+    <div class="modal-title" id="modalItemName">Set Harga</div>
+    <div class="modal-sub">Masukkan harga untuk item ini</div>
+    <input class="modal-input" id="modalPriceInput" type="number" placeholder="0" min="0" />
+    <div class="modal-btns">
+      <button class="modal-cancel" id="modalCancel">Kembali</button>
+      <button class="modal-confirm" id="modalConfirm">Tambah ke Pesanan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Success Screen -->
+<div class="success-screen" id="successScreen">
+  <div class="success-circle">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-nota" id="successNota">TRX-2025-04-0001</div>
+  <div class="success-total" id="successTotal">Rp 0</div>
+  <div class="success-metode" id="successMetode">Tunai</div>
+  <button class="success-wa-btn" id="waBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Kirim ke WhatsApp
+  </button>
+  <button class="success-nota-btn" id="notaBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+      <polyline points="10 9 9 9 8 9"/>
+    </svg>
+    Lihat Nota
+  </button>
+  <button class="success-next-btn" id="nextTransBtn">Transaksi Berikutnya</button>
+</div>
+
+<!-- Sync success banner -->
+<div class="sync-success-banner" id="syncBanner">
+  <span class="sync-icon">✓</span>
+  <span id="syncBannerText">Transaksi tersync</span>
+</div>
+
+<script>
+// ══════════════════════════════════
+// CONFIG
+// ══════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec';
+const DB_NAME = 'MegarPOS';
+const DB_VERSION = 1;
+const STORE_NAME = 'pendingTrx';
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let kasir = null;
+let passkey = '';
+let menuData = [];
+let cart = {};
+let selectedMetode = 'Tunai';
+let pendingManualItem = null;
+let isTablet = window.innerWidth >= 600;
+let isOnline = navigator.onLine;
+let db = null;
+let syncInProgress = false;
+
+// ══════════════════════════════════
+// INDEXEDDB — LOCAL STORAGE
+// ══════════════════════════════════
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME, { keyPath: 'localId', autoIncrement: true });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function saveTrxLocal(trxData) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.add({ ...trxData, savedAt: new Date().toISOString() });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function getAllPendingTrx() {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function deletePendingTrx(localId) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.delete(localId);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function countPendingTrx() {
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.count();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(0);
+  });
+}
+
+// ══════════════════════════════════
+// ONLINE/OFFLINE DETECTION
+// ══════════════════════════════════
+function setupConnectivityListeners() {
+  window.addEventListener('online', async () => {
+    isOnline = true;
+    updateOnlineIndicator();
+    await autoSync();
+  });
+
+  window.addEventListener('offline', () => {
+    isOnline = false;
+    updateOnlineIndicator();
+  });
+
+  // Cek berkala setiap 30 detik
+  setInterval(async () => {
+    const wasOnline = isOnline;
+    isOnline = navigator.onLine;
+    if (!wasOnline && isOnline) {
+      updateOnlineIndicator();
+      await autoSync();
+    } else {
+      updateOnlineIndicator();
+    }
+  }, 30000);
+}
+
+async function updateOnlineIndicator() {
+  const indicator = document.getElementById('offlineIndicator');
+  const syncBtn = document.getElementById('syncBtn');
+  const count = await countPendingTrx();
+
+  if (!isOnline) {
+    indicator.style.display = 'flex';
+    syncBtn.style.display = 'none';
+    document.getElementById('offlineCount').textContent = count > 0 ? `· ${count} pending` : '';
+  } else if (count > 0) {
+    indicator.style.display = 'none';
+    syncBtn.style.display = 'flex';
+  } else {
+    indicator.style.display = 'none';
+    syncBtn.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════
+// AUTO SYNC
+// ══════════════════════════════════
+async function autoSync() {
+  if (syncInProgress || !isOnline) return;
+  const pending = await getAllPendingTrx();
+  if (pending.length === 0) return;
+
+  syncInProgress = true;
+  let synced = 0;
+  let failed = 0;
+
+  for (const trx of pending) {
+    try {
+      const { localId, savedAt, ...trxData } = trx;
+      const payload = encodeURIComponent(JSON.stringify(trxData));
+      const res = await fetch(`${API_URL}?payload=${payload}`);
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        await deletePendingTrx(localId);
+        synced++;
+      } else {
+        failed++;
+      }
+    } catch (e) {
+      failed++;
+    }
+  }
+
+  syncInProgress = false;
+  await updateOnlineIndicator();
+
+  if (synced > 0) {
+    showSyncBanner(synced, failed);
+  }
+}
+
+function showSyncBanner(synced, failed) {
+  const banner = document.getElementById('syncBanner');
+  const text = document.getElementById('syncBannerText');
+
+  if (failed === 0) {
+    text.textContent = `${synced} transaksi berhasil tersync ✓`;
+  } else {
+    text.textContent = `${synced} tersync · ${failed} gagal`;
+  }
+
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 4000);
+}
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  // Cek sesi
+  const sesiRaw = sessionStorage.getItem('megar_kasir');
+  passkey = sessionStorage.getItem('megar_passkey') || '';
+  if (!sesiRaw || !passkey) {
+    window.location.href = 'index.html';
+    return;
+  }
+  kasir = JSON.parse(sesiRaw);
+  // Replace history entry supaya tombol back tidak kembali ke halaman ini setelah logout
+  // Push dummy state — tombol back akan hit state ini dulu, bukan keluar
+  history.pushState(null, '', window.location.href);
+  history.pushState(null, '', window.location.href);
+  // Block back button — redirect ke login jika sesi tidak valid
+  window.addEventListener('popstate', () => {
+    if (!sessionStorage.getItem('megar_kasir')) {
+      window.location.replace('index.html');
+    } else {
+      // Push lagi supaya back button selalu blocked
+      history.pushState(null, '', window.location.href);
+    }
+  });
+
+  // Set label kasir
+  document.getElementById('kasirLabel').textContent = kasir.nama;
+  document.getElementById('orderKasirTag').textContent = kasir.nama;
+  document.getElementById('drawerKasirTag').textContent = kasir.nama;
+
+
+  // ── BACK BUTTON HANDLER ──
+  // Tombol back selalu ke login, bukan halaman sebelumnya
+  window.addEventListener('popstate', function() {
+    window.location.replace('index.html');
+  });
+  // Push state agar popstate bisa terpicu
+  history.pushState(null, '', window.location.href);
+
+  // Tablet: show order panel
+  if (isTablet) {
+    document.getElementById('orderPanel').style.width = '300px';
+  }
+
+  // Init IndexedDB
+  try { await initDB(); } catch(e) { console.warn('IndexedDB tidak tersedia:', e); }
+
+  // Setup koneksi
+  setupConnectivityListeners();
+  await updateOnlineIndicator();
+
+  await loadMenu();
+  bindEvents();
+
+  // Sync jika ada pending saat buka aplikasi
+  if (isOnline) setTimeout(autoSync, 2000);
+});
+
+// ══════════════════════════════════
+// LOAD MENU
+// ══════════════════════════════════
+async function loadMenu() {
+  try {
+    const res = await fetch(`${API_URL}?action=getMenu`);
+    const data = await res.json();
+    if (data.status === 'success') {
+      menuData = data.menu;
+      renderCategories();
+      renderMenu('Semua');
+    }
+  } catch (e) {
+    showToast('Gagal memuat menu. Periksa koneksi.', 3000);
+  }
+}
+
+function renderCategories() {
+  const cats = ['Semua', ...new Set(menuData.map(m => m.kategori))];
+  const tabsEl = document.getElementById('catTabs');
+  tabsEl.innerHTML = '';
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab' + (cat === 'Semua' ? ' active' : '');
+    btn.dataset.cat = cat;
+    btn.textContent = cat;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderMenu(cat);
+    });
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderMenu(cat) {
+  const grid = document.getElementById('menuGrid');
+  grid.innerHTML = '';
+  const items = cat === 'Semua' ? menuData : menuData.filter(m => m.kategori === cat);
+
+  items.forEach(item => {
+    const inCart = cart[item.id];
+    const div = document.createElement('button');
+    div.className = 'menu-item' +
+      (inCart ? ' has-qty' : '') +
+      (item.harga_manual ? ' manual-price' : '');
+    div.dataset.itemid = item.id;
+    div.innerHTML = `
+      <span class="item-name">${item.item}</span>
+      <span class="item-price ${item.harga_manual ? 'manual' : ''}">
+        ${item.harga_manual ? 'Harga manual' : formatRp(item.harga)}
+      </span>
+      ${inCart ? `<span class="item-badge">${inCart.qty}</span>` : ''}
+    `;
+    div.addEventListener('click', () => handleMenuTap(item));
+    grid.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════
+// CART LOGIC
+// ══════════════════════════════════
+function handleMenuTap(item) {
+  if (item.harga_manual) {
+    pendingManualItem = item;
+    document.getElementById('modalItemName').textContent = item.item;
+    document.getElementById('modalPriceInput').value = '';
+    document.getElementById('manualModal').classList.add('show');
+    setTimeout(() => document.getElementById('modalPriceInput').focus(), 100);
+    return;
+  }
+  addToCart(item, item.harga);
+}
+
+function addToCart(item, harga) {
+  if (cart[item.id]) {
+    cart[item.id].qty++;
+    cart[item.id].subtotal = cart[item.id].qty * cart[item.id].harga;
+  } else {
+    cart[item.id] = {
+      id: item.id,
+      nama: item.item,
+      kategori: item.kategori,
+      harga: harga,
+      qty: 1,
+      subtotal: harga
+    };
+  }
+  refreshAll();
+}
+
+function changeQty(itemId, delta) {
+  if (!cart[itemId]) return;
+  cart[itemId].qty += delta;
+  if (cart[itemId].qty <= 0) {
+    delete cart[itemId];
+  } else {
+    cart[itemId].subtotal = cart[itemId].qty * cart[itemId].harga;
+  }
+  refreshAll();
+}
+
+function getTotal() {
+  return Object.values(cart).reduce((s, i) => s + i.subtotal, 0);
+}
+
+function getTotalQty() {
+  return Object.values(cart).reduce((s, i) => s + i.qty, 0);
+}
+
+// ══════════════════════════════════
+// RENDER CART
+// ══════════════════════════════════
+function refreshAll() {
+  const total = getTotal();
+  const totalQty = getTotalQty();
+  const items = Object.values(cart);
+  const hasItems = items.length > 0;
+
+  // Update total PERTAMA
+  const fmt = formatRp(total);
+  document.getElementById('totalAmount').textContent = fmt;
+  document.getElementById('drawerTotal').textContent = fmt;
+
+  // Bayar buttons
+  document.getElementById('btnBayar').disabled = !hasItems;
+  document.getElementById('drawerBtnBayar').disabled = !hasItems;
+
+  // FAB badge
+  const badge = document.getElementById('cartBadge');
+  badge.textContent = totalQty;
+  badge.classList.toggle('show', totalQty > 0);
+
+  // Order lists
+  renderOrderList('orderList', 'orderEmpty');
+  renderOrderList('drawerList', 'drawerEmpty');
+
+  // Update badge di menu grid tanpa rebuild seluruh grid
+  updateMenuBadges();
+}
+
+function updateMenuBadges() {
+  document.querySelectorAll('.menu-item').forEach(el => {
+    const itemId = el.dataset.itemid;
+    if (!itemId) return;
+    // Hapus badge lama dulu supaya tidak dobel
+    const existing = el.querySelector('.item-badge');
+    if (existing) existing.remove();
+    el.classList.remove('has-qty');
+
+    if (cart[itemId] && cart[itemId].qty > 0) {
+      el.classList.add('has-qty');
+      const badge = document.createElement('span');
+      badge.className = 'item-badge';
+      badge.textContent = cart[itemId].qty;
+      el.appendChild(badge);
+    }
+  });
+}
+
+function renderOrderList(listId, emptyId) {
+  const list = document.getElementById(listId);
+  const empty = document.getElementById(emptyId);
+  const items = Object.values(cart);
+
+  // Kosongkan hanya item order, jangan hapus empty element
+  Array.from(list.children).forEach(child => {
+    if (child !== empty) child.remove();
+  });
+
+  if (items.length === 0) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.innerHTML = `
+      <div class="order-item-info">
+        <div class="order-item-name">${item.nama}</div>
+        <div class="order-item-price">${formatRp(item.harga)} / item</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn minus" data-id="${item.id}" data-delta="-1">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" data-id="${item.id}" data-delta="1">+</button>
+      </div>
+      <div class="order-item-subtotal">${formatRp(item.subtotal)}</div>
+    `;
+    // Attach event langsung ke elemen, bukan lewat querySelectorAll setelah appendChild
+    div.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        changeQty(btn.dataset.id, parseInt(btn.dataset.delta));
+      });
+    });
+    list.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════
+// EVENTS
+// ══════════════════════════════════
+function bindEvents() {
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('Yakin ingin logout?')) {
+      sessionStorage.clear();
+      window.location.replace('index.html');
+    }
+  });
+
+  // FAB → buka drawer
+  document.getElementById('cartFab').addEventListener('click', openDrawer);
+  document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+  // Metode bayar (panel)
+  document.getElementById('metodeGroup').addEventListener('click', (e) => {
+    const btn = e.target.closest('.metode-btn');
+    if (!btn) return;
+    document.querySelectorAll('#metodeGroup .metode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#drawerMetodeGroup .metode-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.metode === btn.dataset.metode);
+    });
+    btn.classList.add('active');
+    selectedMetode = btn.dataset.metode;
+  });
+
+  // Metode bayar (drawer)
+  document.getElementById('drawerMetodeGroup').addEventListener('click', (e) => {
+    const btn = e.target.closest('.metode-btn');
+    if (!btn) return;
+    document.querySelectorAll('#drawerMetodeGroup .metode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#metodeGroup .metode-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.metode === btn.dataset.metode);
+    });
+    btn.classList.add('active');
+    selectedMetode = btn.dataset.metode;
+  });
+
+  // Bayar buttons
+  document.getElementById('btnBayar').addEventListener('click', handleBayar);
+  document.getElementById('drawerBtnBayar').addEventListener('click', handleBayar);
+
+
+  // pageshow fires on back navigation — lebih reliable dari popstate
+  window.addEventListener('pageshow', function(e) {
+    var kasir = sessionStorage.getItem('megar_kasir');
+    if (!kasir) {
+      window.location.replace('index.html');
+    }
+  });
+
+  // Sync button manual
+  document.getElementById('syncBtn').addEventListener('click', async () => {
+    if (!isOnline) { showToast('Tidak ada koneksi internet', 2000); return; }
+    const pending = await getAllPendingTrx();
+    if (pending.length === 0) { showToast('Tidak ada transaksi pending', 2000); return; }
+    showToast('Menyync ' + pending.length + ' transaksi...', 2000);
+    await autoSync();
+  });
+
+  // Manual modal
+  document.getElementById('modalCancel').addEventListener('click', () => {
+    document.getElementById('manualModal').classList.remove('show');
+    pendingManualItem = null;
+  });
+  document.getElementById('modalConfirm').addEventListener('click', () => {
+    const harga = parseInt(document.getElementById('modalPriceInput').value);
+    if (!harga || harga <= 0) {
+      document.getElementById('modalPriceInput').style.borderColor = 'var(--error)';
+      document.getElementById('modalPriceInput').focus();
+      setTimeout(() => { document.getElementById('modalPriceInput').style.borderColor = ''; }, 1500);
+      return;
+    }
+    document.getElementById('manualModal').classList.remove('show');
+    addToCart(pendingManualItem, harga);
+    pendingManualItem = null;
+    // Jika di HP, buka drawer otomatis supaya user lihat item sudah masuk
+    if (!isTablet) openDrawer();
+  });
+  document.getElementById('modalPriceInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('modalConfirm').click();
+  });
+
+  // Success screen
+  document.getElementById('nextTransBtn').addEventListener('click', () => {
+    document.getElementById('successScreen').classList.remove('show');
+  });
+}
+
+function openDrawer() {
+  document.getElementById('drawerOverlay').classList.add('show');
+  document.getElementById('orderDrawer').classList.add('show');
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('show');
+  document.getElementById('orderDrawer').classList.remove('show');
+}
+
+// ══════════════════════════════════
+// BAYAR
+// ══════════════════════════════════
+async function handleBayar() {
+  const items = Object.values(cart);
+  if (items.length === 0) return;
+
+  const notes = document.getElementById('notesInput').value ||
+                document.getElementById('drawerNotesInput').value;
+
+  const trxData = {
+    action: 'saveTransaction',
+    passkey: passkey,
+    kasirId: kasir.id,
+    kasirNama: kasir.nama,
+    items: items,
+    total: getTotal(),
+    metodeBayar: selectedMetode,
+    catatan: notes
+  };
+
+  setPayLoading(true);
+
+  if (!isOnline) {
+    // Simpan lokal
+    try {
+      const localId = await saveTrxLocal(trxData);
+      const noNota = 'TRX-OFFLINE-' + String(localId).padStart(4, '0');
+      closeDrawer();
+      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true);
+      resetCart();
+      await updateOnlineIndicator();
+      showToast('Tersimpan offline — akan sync otomatis', 3000);
+    } catch(e) {
+      showToast('Gagal menyimpan lokal: ' + e.message, 4000);
+    } finally {
+      setPayLoading(false);
+    }
+    return;
+  }
+
+  // Online — kirim langsung
+  try {
+    const payload = encodeURIComponent(JSON.stringify(trxData));
+    const res = await fetch(`${API_URL}?payload=${payload}`);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      closeDrawer();
+      showSuccessScreen(data.noNota, getTotal(), selectedMetode, items, notes, false);
+      resetCart();
+    } else {
+      // Fallback simpan lokal jika server error
+      await saveTrxLocal(trxData);
+      showToast('Server error — disimpan offline', 3000);
+      closeDrawer();
+      resetCart();
+    }
+  } catch (e) {
+    // Koneksi gagal — simpan lokal
+    try {
+      const localId = await saveTrxLocal(trxData);
+      const noNota = 'TRX-OFFLINE-' + String(localId).padStart(4, '0');
+      closeDrawer();
+      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true);
+      resetCart();
+      await updateOnlineIndicator();
+    } catch(e2) {
+      showToast('Gagal menyimpan: ' + e2.message, 4000);
+    }
+  } finally {
+    setPayLoading(false);
+  }
+}
+
+function setPayLoading(state) {
+  ['btnBayar', 'drawerBtnBayar'].forEach(id => {
+    const btn = document.getElementById(id);
+    btn.disabled = state;
+    btn.classList.toggle('loading', state);
+  });
+}
+
+function resetCart() {
+  cart = {};
+  document.getElementById('notesInput').value = '';
+  document.getElementById('drawerNotesInput').value = '';
+  selectedMetode = 'Tunai';
+  document.querySelectorAll('.metode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.metode === 'Tunai');
+  });
+  refreshAll();
+}
+
+// ══════════════════════════════════
+// SUCCESS SCREEN
+// ══════════════════════════════════
+function showSuccessScreen(noNota, total, metode, items, notes, isOffline = false) {
+  document.getElementById('successNota').textContent = noNota;
+  document.getElementById('successTotal').textContent = formatRp(total);
+  document.getElementById('successMetode').textContent =
+    metode + (isOffline ? ' · 📵 Tersimpan Offline' : ' · ✓ Tersync');
+
+  // Simpan data nota ke sessionStorage untuk halaman nota
+  const notaData = {
+    noNota, total, metodeBayar: metode,
+    items, notes,
+    kasirNama: kasir.nama,
+    timestamp: new Date().toISOString()
+  };
+  sessionStorage.setItem('megar_last_nota', JSON.stringify(notaData));
+
+  // WhatsApp
+  const waText = buildWAText(noNota, items, total, metode, notes, isOffline);
+  document.getElementById('waBtn').onclick = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank');
+  };
+
+  // Nota button
+  document.getElementById('notaBtn').onclick = () => {
+    window.location.href = 'pos-megar-nota.html';
+  };
+
+  document.getElementById('successScreen').classList.add('show');
+  // Tidak auto-close — user klik manual via tombol 'Transaksi Berikutnya'
+}
+
+function buildWAText(noNota, items, total, metode, notes, isOffline = false) {
+  const now = new Date();
+  const tgl = now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  const jam = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+
+  let txt = `☕ *Megar — Coffee & Co*\n`;
+  txt += `📋 Nota: ${noNota}\n`;
+  txt += `🕐 ${tgl}, ${jam}\n`;
+  txt += `👤 Kasir: ${kasir.nama}\n\n`;
+  txt += `*Pesanan:*\n`;
+  items.forEach(i => {
+    txt += `• ${i.nama} x${i.qty} — ${formatRp(i.subtotal)}\n`;
+  });
+  txt += `\n*Total: ${formatRp(total)}*\n`;
+  txt += `💳 ${metode}\n`;
+  if (notes) txt += `\n📝 ${notes}\n`;
+  txt += `\nTerima kasih! 🌿`;
+  return txt;
+}
+
+// ══════════════════════════════════
+// HELPERS
+// ══════════════════════════════════
+function formatRp(num) {
+  return 'Rp ' + Number(num).toLocaleString('id-ID');
+}
+
+function showToast(msg, duration = 2000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>
