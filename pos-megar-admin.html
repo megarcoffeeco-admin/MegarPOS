@@ -1094,30 +1094,10 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">Daftar Menu</div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn-add-menu" id="btnShowAddKat2" style="background:var(--brown-light);border-color:var(--brown);color:var(--brown);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Kategori Baru
-          </button>
-          <button class="btn-add-menu" id="btnShowAddForm2">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Tambah Menu
-          </button>
-        </div>
-      </div>
-
-      <!-- Add Category form -->
-      <div class="add-form" id="addKatForm2">
-        <div class="form-row">
-          <div class="form-group full">
-            <label class="form-label">Nama Kategori Baru</label>
-            <input class="form-input" id="newKatName2" type="text" placeholder="Contoh: Signature Drink" />
-          </div>
-        </div>
-        <div class="form-btns">
-          <button class="btn-cancel-form" id="btnCancelAddKat2">Batal</button>
-          <button class="btn-submit-form" id="btnSubmitAddKat2">Simpan Kategori</button>
-        </div>
+        <button class="btn-add-menu" id="btnShowAddForm2">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Menu
+        </button>
       </div>
 
       <div class="add-form" id="addForm2">
@@ -1134,7 +1114,12 @@
               <option value="Mocktail">Mocktail</option>
               <option value="Chocolate & Matcha">Chocolate & Matcha</option>
               <option value="Snack">Snack</option>
+              <option value="__new__">+ Kategori Baru...</option>
             </select>
+          </div>
+          <div class="form-group" id="newKatWrap2" style="display:none;">
+            <label class="form-label">Nama Kategori Baru</label>
+            <input class="form-input" id="newKatInput2" type="text" placeholder="Contoh: Signature Drink" />
           </div>
           <div class="form-group">
             <label class="form-label">Harga (Rp)</label>
@@ -1255,24 +1240,13 @@ let allMenu = [];
 let pendingDeleteId = null;
 let todayTrx = [];
 
-const KAT_STORAGE_KEY = 'megar_custom_kategori';
 const DEFAULT_KATEGORI = ['Espresso Based', 'Manual Brew', 'Mocktail', 'Chocolate & Matcha', 'Snack'];
 
-function getCustomKategori() {
-  try {
-    const raw = localStorage.getItem(KAT_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
-}
-
-function saveCustomKategori(list) {
-  localStorage.setItem(KAT_STORAGE_KEY, JSON.stringify(list));
-}
-
 function getAllKategoriOptions() {
-  // Gabungkan default + custom + kategori yang sudah ada di menu (jaga-jaga)
+  // Kategori diambil otomatis dari Master_Menu (Sheets) + daftar default,
+  // supaya kategori yang ditambahkan langsung lewat Sheets langsung muncul di sini.
   const fromMenu = allMenu.map(m => m.kategori).filter(Boolean);
-  const all = [...DEFAULT_KATEGORI, ...getCustomKategori(), ...fromMenu];
+  const all = [...DEFAULT_KATEGORI, ...fromMenu];
   return [...new Set(all)];
 }
 
@@ -1281,7 +1255,8 @@ function renderKategoriDropdown() {
   if (!select) return;
   const current = select.value;
   const options = getAllKategoriOptions();
-  select.innerHTML = options.map(k => `<option value="${k}">${k}</option>`).join('');
+  select.innerHTML = options.map(k => `<option value="${k}">${k}</option>`).join('')
+    + '<option value="__new__">+ Kategori Baru...</option>';
   if (options.includes(current)) select.value = current;
 }
 
@@ -1551,40 +1526,8 @@ function bindEvents() {
     }
   });
 
-  // Kategori management events
-  document.getElementById('btnShowAddKat2').addEventListener('click', () => {
-    document.getElementById('addForm2').classList.remove('show');
-    document.getElementById('addKatForm2').classList.toggle('show');
-  });
-  document.getElementById('btnCancelAddKat2').addEventListener('click', () => {
-    document.getElementById('addKatForm2').classList.remove('show');
-    document.getElementById('newKatName2').value = '';
-  });
-  document.getElementById('btnSubmitAddKat2').addEventListener('click', () => {
-    const nama = document.getElementById('newKatName2').value.trim();
-    if (!nama) { showToast('Nama kategori wajib diisi', true); return; }
-
-    const existing = getAllKategoriOptions();
-    if (existing.some(k => k.toLowerCase() === nama.toLowerCase())) {
-      showToast('Kategori sudah ada', true);
-      return;
-    }
-
-    const customList = getCustomKategori();
-    customList.push(nama);
-    saveCustomKategori(customList);
-
-    renderKategoriDropdown();
-    document.getElementById('newItemKat2').value = nama;
-
-    showToast('Kategori "' + nama + '" ditambahkan ✓');
-    document.getElementById('addKatForm2').classList.remove('show');
-    document.getElementById('newKatName2').value = '';
-  });
-
   // Menu tab 2 events
   document.getElementById('btnShowAddForm2').addEventListener('click', () => {
-    document.getElementById('addKatForm2').classList.remove('show');
     document.getElementById('addForm2').classList.toggle('show');
   });
   document.getElementById('btnCancelAdd2').addEventListener('click', () => {
@@ -1594,9 +1537,18 @@ function bindEvents() {
     document.getElementById('newItemHarga2').disabled = e.target.checked;
     if (e.target.checked) document.getElementById('newItemHarga2').value = '';
   });
+  document.getElementById('newItemKat2').addEventListener('change', (e) => {
+    const isNew = e.target.value === '__new__';
+    document.getElementById('newKatWrap2').style.display = isNew ? 'flex' : 'none';
+    if (isNew) document.getElementById('newKatInput2').focus();
+  });
   document.getElementById('btnSubmitAdd2').addEventListener('click', async () => {
     const nama = document.getElementById('newItemName2').value.trim();
-    const kat = document.getElementById('newItemKat2').value;
+    let kat = document.getElementById('newItemKat2').value;
+    if (kat === '__new__') {
+      kat = document.getElementById('newKatInput2').value.trim();
+      if (!kat) { showToast('Nama kategori baru wajib diisi', true); return; }
+    }
     const harga = parseInt(document.getElementById('newItemHarga2').value) || 0;
     const isManual = document.getElementById('newItemManual2').checked;
     if (!nama) { showToast('Nama item wajib diisi', true); return; }
@@ -1607,8 +1559,11 @@ function bindEvents() {
       document.getElementById('addForm2').classList.remove('show');
       document.getElementById('newItemName2').value = '';
       document.getElementById('newItemHarga2').value = '';
+      document.getElementById('newKatInput2').value = '';
+      document.getElementById('newKatWrap2').style.display = 'none';
       await loadMenu();
       renderMenuList2();
+      renderKategoriDropdown();
     } else {
       showToast('Gagal menambahkan menu', true);
     }
