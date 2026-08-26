@@ -1087,30 +1087,39 @@
   <!-- ══ TAB: MENU ══ -->
   <div class="tab-page" id="tab-menu">
 
-    <!-- Arabika section moved here -->
     <div class="section-title">
-      ☕ Update Harian Arabika
-      <span>set harga & status setiap hari</span>
-    </div>
-    <div class="card" id="arabikaCard2">
-      <div class="arabika-grid" id="arabikaGrid2"></div>
-      <div style="padding: 0 16px 14px;">
-        <button class="arabika-save-btn" id="arabikaBtn2">Simpan & Aktifkan</button>
-      </div>
-    </div>
-
-    <div class="section-title" style="margin-top:8px;">
       🌿 Semua Menu
       <span id="menuCount2">0 item</span>
     </div>
     <div class="card">
       <div class="card-header">
         <div class="card-title">Daftar Menu</div>
-        <button class="btn-add-menu" id="btnShowAddForm2">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Menu
-        </button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-add-menu" id="btnShowAddKat2" style="background:var(--brown-light);border-color:var(--brown);color:var(--brown);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Kategori Baru
+          </button>
+          <button class="btn-add-menu" id="btnShowAddForm2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Menu
+          </button>
+        </div>
       </div>
+
+      <!-- Add Category form -->
+      <div class="add-form" id="addKatForm2">
+        <div class="form-row">
+          <div class="form-group full">
+            <label class="form-label">Nama Kategori Baru</label>
+            <input class="form-input" id="newKatName2" type="text" placeholder="Contoh: Signature Drink" />
+          </div>
+        </div>
+        <div class="form-btns">
+          <button class="btn-cancel-form" id="btnCancelAddKat2">Batal</button>
+          <button class="btn-submit-form" id="btnSubmitAddKat2">Simpan Kategori</button>
+        </div>
+      </div>
+
       <div class="add-form" id="addForm2">
         <div class="form-row">
           <div class="form-group">
@@ -1246,6 +1255,36 @@ let allMenu = [];
 let pendingDeleteId = null;
 let todayTrx = [];
 
+const KAT_STORAGE_KEY = 'megar_custom_kategori';
+const DEFAULT_KATEGORI = ['Espresso Based', 'Manual Brew', 'Mocktail', 'Chocolate & Matcha', 'Snack'];
+
+function getCustomKategori() {
+  try {
+    const raw = localStorage.getItem(KAT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function saveCustomKategori(list) {
+  localStorage.setItem(KAT_STORAGE_KEY, JSON.stringify(list));
+}
+
+function getAllKategoriOptions() {
+  // Gabungkan default + custom + kategori yang sudah ada di menu (jaga-jaga)
+  const fromMenu = allMenu.map(m => m.kategori).filter(Boolean);
+  const all = [...DEFAULT_KATEGORI, ...getCustomKategori(), ...fromMenu];
+  return [...new Set(all)];
+}
+
+function renderKategoriDropdown() {
+  const select = document.getElementById('newItemKat2');
+  if (!select) return;
+  const current = select.value;
+  const options = getAllKategoriOptions();
+  select.innerHTML = options.map(k => `<option value="${k}">${k}</option>`).join('');
+  if (options.includes(current)) select.value = current;
+}
+
 // ══════════════════════════════════
 // INIT
 // ══════════════════════════════════
@@ -1287,6 +1326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadMenu(), loadTodayTrx()]);
   hideLoading();
   bindEvents();
+  renderKategoriDropdown();
 });
 
 // ══════════════════════════════════
@@ -1364,47 +1404,6 @@ function renderMenuList() {
         `"${btn.dataset.name}" akan dihapus dari daftar menu.`;
       document.getElementById('deleteModal').classList.add('show');
     });
-  });
-}
-
-function renderArabikaSection() {
-  const arabikaItems = allMenu.filter(m => m.harga_manual === true && m.kategori !== 'Snack');
-  const grid = document.getElementById('arabikaGrid');
-  grid.innerHTML = '';
-
-  if (arabikaItems.length === 0) {
-    grid.innerHTML = '<div style="padding:12px;color:var(--text-faint);font-size:13px;grid-column:1/-1;">Tidak ada item harga manual non-Snack.</div>';
-    return;
-  }
-
-  arabikaItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'arabika-item' + (item.aktif ? ' active-item' : '');
-    div.innerHTML = `
-      <div class="arabika-name">${item.item}</div>
-      <div class="arabika-row">
-        <label class="arabika-toggle">
-          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="arb-toggle" />
-          <div class="toggle-track"></div>
-        </label>
-        <div class="price-input-wrap">
-          <span class="price-prefix">Rp</span>
-          <input class="price-input" type="number" placeholder="0" min="0"
-            value="${item.harga > 0 ? item.harga : ''}"
-            data-id="${item.id}"
-            ${!item.aktif ? 'disabled' : ''}
-          />
-        </div>
-      </div>
-    `;
-    // Toggle enable/disable price input
-    const toggle = div.querySelector('.arb-toggle');
-    const priceInput = div.querySelector('.price-input');
-    toggle.addEventListener('change', () => {
-      priceInput.disabled = !toggle.checked;
-      div.classList.toggle('active-item', toggle.checked);
-    });
-    grid.appendChild(div);
   });
 }
 
@@ -1506,8 +1505,6 @@ function bindEvents() {
     showToast('Data diperbarui');
   });
 
-  // Arabika management moved to Tab Menu
-
   // Menu management moved to Tab Menu
 
   // Init tabs
@@ -1554,8 +1551,40 @@ function bindEvents() {
     }
   });
 
+  // Kategori management events
+  document.getElementById('btnShowAddKat2').addEventListener('click', () => {
+    document.getElementById('addForm2').classList.remove('show');
+    document.getElementById('addKatForm2').classList.toggle('show');
+  });
+  document.getElementById('btnCancelAddKat2').addEventListener('click', () => {
+    document.getElementById('addKatForm2').classList.remove('show');
+    document.getElementById('newKatName2').value = '';
+  });
+  document.getElementById('btnSubmitAddKat2').addEventListener('click', () => {
+    const nama = document.getElementById('newKatName2').value.trim();
+    if (!nama) { showToast('Nama kategori wajib diisi', true); return; }
+
+    const existing = getAllKategoriOptions();
+    if (existing.some(k => k.toLowerCase() === nama.toLowerCase())) {
+      showToast('Kategori sudah ada', true);
+      return;
+    }
+
+    const customList = getCustomKategori();
+    customList.push(nama);
+    saveCustomKategori(customList);
+
+    renderKategoriDropdown();
+    document.getElementById('newItemKat2').value = nama;
+
+    showToast('Kategori "' + nama + '" ditambahkan ✓');
+    document.getElementById('addKatForm2').classList.remove('show');
+    document.getElementById('newKatName2').value = '';
+  });
+
   // Menu tab 2 events
   document.getElementById('btnShowAddForm2').addEventListener('click', () => {
+    document.getElementById('addKatForm2').classList.remove('show');
     document.getElementById('addForm2').classList.toggle('show');
   });
   document.getElementById('btnCancelAdd2').addEventListener('click', () => {
@@ -1702,7 +1731,7 @@ function initTabs() {
       if (tab.dataset.tab === 'kasir') loadKasirList();
       if (tab.dataset.tab === 'menu') {
         renderMenuList2();
-        renderArabikaSection2();
+        renderKategoriDropdown();
       }
       if (tab.dataset.tab === 'transaksi') {
         const today = new Date().toISOString().split('T')[0];
@@ -2029,60 +2058,7 @@ function renderMenuList2() {
   });
 }
 
-function renderArabikaSection2() {
-  const arabikaItems = allMenu.filter(m => m.harga_manual === true && m.kategori !== 'Snack');
-  const grid = document.getElementById('arabikaGrid2');
-  if (!grid) return;
-  grid.innerHTML = '';
-  if (arabikaItems.length === 0) {
-    grid.innerHTML = '<div style="padding:12px;color:var(--text-faint);font-size:13px;grid-column:1/-1;">Tidak ada item harga manual non-Snack.</div>';
-    return;
-  }
-  arabikaItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'arabika-item' + (item.aktif ? ' active-item' : '');
-    div.innerHTML = `
-      <div class="arabika-name">${item.item}</div>
-      <div class="arabika-row">
-        <label class="arabika-toggle">
-          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="arb-toggle2" />
-          <div class="toggle-track"></div>
-        </label>
-        <div class="price-input-wrap">
-          <span class="price-prefix">Rp</span>
-          <input class="price-input" type="number" placeholder="0" min="0"
-            value="${item.harga > 0 ? item.harga : ''}"
-            data-id="${item.id}" ${!item.aktif ? 'disabled' : ''} />
-        </div>
-      </div>
-    `;
-    const toggle = div.querySelector('.arb-toggle2');
-    const priceInput = div.querySelector('.price-input');
-    toggle.addEventListener('change', () => {
-      priceInput.disabled = !toggle.checked;
-      div.classList.toggle('active-item', toggle.checked);
-    });
-    grid.appendChild(div);
-  });
 
-  document.getElementById('arabikaBtn2').onclick = async () => {
-    const toggles = document.querySelectorAll('.arb-toggle2');
-    let valid = true;
-    const updates = [];
-    toggles.forEach(toggle => {
-      const harga = parseInt(toggle.closest('.arabika-item').querySelector('.price-input').value) || 0;
-      if (toggle.checked && harga <= 0) valid = false;
-      updates.push({ id: toggle.dataset.id, aktif: toggle.checked, harga });
-    });
-    if (!valid) { showToast('Isi harga untuk item yang diaktifkan', true); return; }
-    for (const u of updates) {
-      await apiPost({ action: 'updateDailyPrice', passkey: adminPasskey, id: u.id, harga: u.harga });
-      await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: u.id, aktif: u.aktif });
-    }
-    showToast('Harga Arabika disimpan ✓');
-    await loadMenu();
-  };
-}
 </script>
 
 <script>
