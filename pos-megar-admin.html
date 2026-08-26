@@ -1019,6 +1019,12 @@
         <div id="kasirSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
       </div>
 
+      <!-- Rekap per metode bayar -->
+      <div style="padding:0 16px;" id="metodeSummaryWrap">
+        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Metode Bayar</div>
+        <div id="metodeSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      </div>
+
       <div class="trx-list" id="trxListFilter">
         <div class="trx-empty">Pilih tanggal dan klik Tampilkan</div>
       </div>
@@ -1053,6 +1059,16 @@
         <div class="card-title">Menu Terlaris Minggu Ini</div>
       </div>
       <div style="padding:8px 0;" id="weekTopMenu">
+        <div class="trx-empty">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- Rekap per metode bayar minggu ini -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="card-title">Rekap per Metode Bayar</div>
+      </div>
+      <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap;" id="weekMetodeList">
         <div class="trx-empty">Memuat...</div>
       </div>
     </div>
@@ -1704,6 +1720,7 @@ async function loadTrxByDate(tanggal) {
   const list = document.getElementById('trxListFilter');
   list.innerHTML = '<div class="trx-empty">Memuat...</div>';
   document.getElementById('kasirSummaryList').innerHTML = '';
+  document.getElementById('metodeSummaryList').innerHTML = '';
 
   try {
     const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`);
@@ -1722,6 +1739,7 @@ async function loadTrxByDate(tanggal) {
     // Group by nota
     const grouped = {};
     const kasirMap = {};
+    const metodeMap = {};
     trx.forEach(row => {
       if (!grouped[row.noNota]) {
         grouped[row.noNota] = { noNota: row.noNota, jam: row.jam, kasir: row.kasirNama, items: [], total: row.total, metode: row.metodeBayar };
@@ -1742,6 +1760,29 @@ async function loadTrxByDate(tanggal) {
       chip.style.cssText = 'background:var(--green-pale);border:1px solid var(--green-light);border-radius:20px;padding:5px 12px;font-size:12px;';
       chip.innerHTML = `<strong>${nama}</strong> · ${d.trx.size} trx · ${formatRp(omzet)}`;
       kasirSummary.appendChild(chip);
+    });
+
+    // Rekap per metode bayar (hitung per nota, bukan per baris item, supaya tidak double count)
+    Object.values(grouped).forEach(g => {
+      const metode = g.metode || 'Tidak diketahui';
+      if (!metodeMap[metode]) metodeMap[metode] = { trx: 0, omzet: 0 };
+      metodeMap[metode].trx++;
+      metodeMap[metode].omzet += Number(g.total);
+    });
+
+    const metodeIcon = { Tunai: '💵', QRIS: '📱', Transfer: '🏦' };
+    const metodeColor = {
+      Tunai:    { bg: '#e8f5e9', border: '#a5d6a7', text: '#2e7d32' },
+      QRIS:     { bg: '#e3f2fd', border: '#90caf9', text: '#1565c0' },
+      Transfer: { bg: '#fff3e0', border: '#ffcc80', text: '#e65100' }
+    };
+    const metodeSummary = document.getElementById('metodeSummaryList');
+    Object.entries(metodeMap).forEach(([metode, d]) => {
+      const c = metodeColor[metode] || { bg: 'var(--green-pale)', border: 'var(--green-light)', text: 'var(--text-mid)' };
+      const chip = document.createElement('div');
+      chip.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:${c.text};border-radius:20px;padding:5px 12px;font-size:12px;`;
+      chip.innerHTML = `${metodeIcon[metode] || '💳'} <strong>${metode}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
+      metodeSummary.appendChild(chip);
     });
 
     // Render list
@@ -1772,8 +1813,10 @@ async function loadTrxByDate(tanggal) {
 async function loadWeeklySummary() {
   const tbody = document.getElementById('weekTableBody');
   const topMenu = document.getElementById('weekTopMenu');
+  const weekMetodeList = document.getElementById('weekMetodeList');
   tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat...</td></tr>';
   topMenu.innerHTML = '<div class="trx-empty">Memuat...</div>';
+  weekMetodeList.innerHTML = '<div class="trx-empty">Memuat...</div>';
 
   // Generate last 7 days
   const days = [];
@@ -1787,6 +1830,7 @@ async function loadWeeklySummary() {
   let weekOmzet = 0, weekTrxTotal = 0;
   let bestDay = { omzet: 0, tgl: '' };
   const itemMap = {};
+  const weekMetodeMap = {};
   const rows = [];
 
   for (const tgl of days) {
@@ -1805,6 +1849,16 @@ async function loadWeeklySummary() {
         if (!itemMap[r.itemNama]) itemMap[r.itemNama] = { qty: 0, omzet: 0 };
         itemMap[r.itemNama].qty += Number(r.qty);
         itemMap[r.itemNama].omzet += Number(r.subtotal);
+      });
+
+      // Rekap per metode bayar — hitung per nota (bukan per baris item) supaya tidak double count
+      [...notaSet].forEach(nota => {
+        const row = trx.find(r => r.noNota === nota);
+        if (!row) return;
+        const metode = row.metodeBayar || 'Tidak diketahui';
+        if (!weekMetodeMap[metode]) weekMetodeMap[metode] = { trx: 0, omzet: 0 };
+        weekMetodeMap[metode].trx++;
+        weekMetodeMap[metode].omzet += Number(row.total);
       });
 
       weekOmzet += omzet;
@@ -1854,6 +1908,26 @@ async function loadWeeklySummary() {
         <div style="font-size:12px;font-weight:600;color:var(--green-mid);">${formatRp(d.omzet)}</div>
       `;
       topMenu.appendChild(div);
+    });
+  }
+
+  // Rekap per metode bayar
+  const metodeIcon = { Tunai: '💵', QRIS: '📱', Transfer: '🏦' };
+  const metodeColor = {
+    Tunai:    { bg: '#e8f5e9', border: '#a5d6a7', text: '#2e7d32' },
+    QRIS:     { bg: '#e3f2fd', border: '#90caf9', text: '#1565c0' },
+    Transfer: { bg: '#fff3e0', border: '#ffcc80', text: '#e65100' }
+  };
+  if (Object.keys(weekMetodeMap).length === 0) {
+    weekMetodeList.innerHTML = '<div class="trx-empty">Belum ada data minggu ini.</div>';
+  } else {
+    weekMetodeList.innerHTML = '';
+    Object.entries(weekMetodeMap).forEach(([metode, d]) => {
+      const c = metodeColor[metode] || { bg: 'var(--green-pale)', border: 'var(--green-light)', text: 'var(--text-mid)' };
+      const chip = document.createElement('div');
+      chip.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:${c.text};border-radius:20px;padding:6px 14px;font-size:13px;`;
+      chip.innerHTML = `${metodeIcon[metode] || '💳'} <strong>${metode}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
+      weekMetodeList.appendChild(chip);
     });
   }
 
