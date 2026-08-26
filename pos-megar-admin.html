@@ -17,8 +17,8 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
-    <!-- Screen Auth Check -->
-    <div id="authOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 px-4">
+    <!-- Screen Auth Check (Bypass / Hidden) -->
+    <div id="authOverlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 px-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
             <h2 class="text-xl font-bold mb-2">Megar POS Admin</h2>
             <p class="text-sm text-gray-500 mb-4">Masukkan Passkey Admin untuk melanjutkan.</p>
@@ -27,8 +27,8 @@
         </div>
     </div>
 
-    <!-- Main Container -->
-    <div id="mainContent" class="hidden min-h-screen flex flex-col">
+    <!-- Main Container (Direct Display) -->
+    <div id="mainContent" class="min-h-screen flex flex-col">
         <!-- Header -->
         <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
             <div class="flex items-center space-x-3">
@@ -36,8 +36,8 @@
                 <h1 class="text-xl font-bold text-gray-800">Admin Megar POS</h1>
             </div>
             <button onclick="logoutAdmin()" class="text-sm bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition flex items-center space-x-1">
-                <i data-lucide="log-out" class="w-4 h-4"></i>
-                <span>Keluar</span>
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                <span>Reload</span>
             </button>
         </header>
 
@@ -248,39 +248,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            checkSession();
+            loadOverviewData();
         });
 
-        function checkSession() {
-            const logged = sessionStorage.getItem('megar_admin_logged');
-            if (logged === 'true') {
-                document.getElementById('authOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                loadOverviewData();
-            }
-        }
-
-        function loginAdmin() {
-            const pass = document.getElementById('inputPasskey').value;
-            if (!pass) return alert("Masukkan Passkey!");
-            
-            fetch(`${API_URL}?action=verifyAdminPasskey&passkey=${encodeURIComponent(pass)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        sessionStorage.setItem('megar_admin_logged', 'true');
-                        document.getElementById('authOverlay').classList.add('hidden');
-                        document.getElementById('mainContent').classList.remove('hidden');
-                        loadOverviewData();
-                    } else {
-                        alert("Passkey Admin Salah!");
-                    }
-                })
-                .catch(() => alert("Gagal koneksi ke server."));
-        }
-
         function logoutAdmin() {
-            sessionStorage.removeItem('megar_admin_logged');
             location.reload();
         }
 
