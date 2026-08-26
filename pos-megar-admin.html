@@ -1,493 +1,477 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Megar POS</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-    }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Megar POS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #4F46E5;
+            color: #4F46E5;
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 font-sans pb-20">
+<body class="bg-gray-50 font-sans text-gray-800">
 
-  <!-- SCRIPT INTEGRASI PWA -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW Admin Registered!', reg.scope))
-          .catch(err => console.error('SW Admin Registration Failed!', err));
-      });
-    }
-  </script>
-
-  <!-- MODAL PASSKEY ADMIN -->
-  <div id="modalPasskey" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
-      <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-        🛡️
-      </div>
-      <h2 class="text-xl font-bold text-slate-800">Verifikasi Admin</h2>
-      <p class="text-xs text-slate-500">Masukkan Passkey Admin untuk mengakses Dashboard</p>
-      
-      <form id="formPasskeyAdmin" onsubmit="event.preventDefault(); verifyPasskeyAdmin();" class="space-y-4">
-        <input type="password" id="inputPasskeyAdmin" autofocus placeholder="Masukkan Passkey..." class="w-full text-center text-lg tracking-widest px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-indigo-200 active:scale-95">
-          Masuk Dashboard
-        </button>
-      </form>
+    <!-- Screen Auth Check -->
+    <div id="authOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <h2 class="text-xl font-bold mb-2">Megar POS Admin</h2>
+            <p class="text-sm text-gray-500 mb-4">Masukkan Passkey Admin untuk melanjutkan.</p>
+            <input type="password" id="inputPasskey" placeholder="Passkey Admin" class="w-full border p-3 rounded-lg mb-4 text-center text-lg tracking-widest focus:outline-none focus:border-indigo-600">
+            <button onclick="loginAdmin()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">Masuk Dashboard</button>
+        </div>
     </div>
-  </div>
 
-  <!-- CONTAINER DASHBOARD (HIDDEN DEFAULT) -->
-  <div id="dashboardApp" class="hidden max-w-4xl mx-auto px-4 pt-4">
-
-    <!-- HEADER & NAVIGASI ADMIN -->
-    <header class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">
-          M
-        </div>
-        <div>
-          <h1 class="font-bold text-lg text-slate-800 leading-tight">Megar POS Admin</h1>
-          <p class="text-xs text-slate-500" id="currentDateDisplay">Memuat tanggal...</p>
-        </div>
-      </div>
-      <button onclick="logoutAdmin()" class="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 self-end sm:self-auto">
-        🔒 Keluar Admin
-      </button>
-    </header>
-
-    <!-- TAB NAVIGASI UTAMA -->
-    <nav class="flex bg-slate-200/70 p-1 rounded-2xl mb-4 overflow-x-auto hide-scrollbar text-xs font-semibold text-slate-600 gap-1">
-      <button onclick="switchTab('overview')" id="tabBtn-overview" class="tab-btn flex-1 py-2.5 px-3 rounded-xl transition text-center whitespace-nowrap bg-white text-indigo-600 shadow-sm">
-        📊 Ringkasan
-      </button>
-      <button onclick="switchTab('transactions')" id="tabBtn-transactions" class="tab-btn flex-1 py-2.5 px-3 rounded-xl transition text-center whitespace-nowrap hover:text-slate-900">
-        🧾 Transaksi
-      </button>
-      <button onclick="switchTab('weekly')" id="tabBtn-weekly" class="tab-btn flex-1 py-2.5 px-3 rounded-xl transition text-center whitespace-nowrap hover:text-slate-900">
-        📅 Laporan
-      </button>
-      <button onclick="switchTab('menu')" id="tabBtn-menu" class="tab-btn flex-1 py-2.5 px-3 rounded-xl transition text-center whitespace-nowrap hover:text-slate-900">
-        ☕ Kelola Menu
-      </button>
-      <button onclick="switchTab('cashier')" id="tabBtn-cashier" class="tab-btn flex-1 py-2.5 px-3 rounded-xl transition text-center whitespace-nowrap hover:text-slate-900">
-        👤 Kelola Kasir
-      </button>
-    </nav>
-
-    <!-- CONTENT TABS -->
-    <main>
-      <!-- TAB 1: OVERVIEW -->
-      <section id="tab-overview" class="tab-content space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
-            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Total Omzet Hari Ini</span>
-            <div class="text-xl sm:text-2xl font-extrabold text-slate-800" id="todayOmzet">Rp 0</div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
-            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Jumlah Transaksi</span>
-            <div class="text-xl sm:text-2xl font-extrabold text-indigo-600" id="todayCount">0 Transaksi</div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold text-slate-800 text-sm">Aksi Cepat</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onclick="syncDriveReport()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition">
-              ☁️ Sync/Export Laporan ke Drive
-            </button>
-            <button onclick="openModalArabika()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition">
-              🫘 Set Harga Arabika Harian
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: TRANSAKSI HARIAN -->
-      <section id="tab-transactions" class="tab-content space-y-4 hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-slate-800">Daftar Transaksi Hari Ini</h3>
-            <button onclick="loadTransactions()" class="text-xs text-indigo-600 font-medium hover:underline">🔄 Refresh</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-50 text-slate-400 uppercase font-semibold text-[10px]">
-                <tr>
-                  <th class="p-2">Waktu</th>
-                  <th class="p-2">Kasir</th>
-                  <th class="p-2">Metode</th>
-                  <th class="p-2">Total</th>
-                  <th class="p-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="transactionList" class="divide-y divide-slate-100">
-                <tr><td colspan="5" class="p-4 text-center text-slate-400">Memuat transaksi...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: LAPORAN MINGGUAN / BULANAN -->
-      <section id="tab-weekly" class="tab-content space-y-4 hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4">
-          <h3 class="font-bold text-slate-800 mb-2">Laporan Penjualan Rekapitulasi</h3>
-          <p class="text-xs text-slate-500 mb-4">Pilih rentang tanggal untuk mengunduh atau merekap data transaksi.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input type="date" id="startDate" class="p-2 rounded-xl border border-slate-300 text-xs">
-            <input type="date" id="endDate" class="p-2 rounded-xl border border-slate-300 text-xs">
-            <button onclick="fetchRekapData()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-xs transition">
-              Tampilkan Rekap
-            </button>
-          </div>
-          <div id="rekapResult" class="mt-4 text-xs text-slate-600 space-y-2"></div>
-        </div>
-      </section>
-
-      <!-- TAB 4: KELOLA MENU (DENGAN DUKUNGAN KATEGORI DINAMIS) -->
-      <section id="tab-menu" class="tab-content space-y-4 hidden">
-        <!-- FORM TAMBAH/EDIT MENU -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 space-y-3">
-          <h3 class="font-bold text-slate-800 text-sm" id="formMenuTitle">Tambah Menu Baru</h3>
-          <form id="formMenu" onsubmit="event.preventDefault(); saveMenu();" class="space-y-3">
-            <input type="hidden" id="menuId">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-[11px] font-medium text-slate-500 mb-1">Nama Menu</label>
-                <input type="text" id="menuName" required placeholder="Contoh: Es Kopi Susu" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs">
-              </div>
-              <div>
-                <label class="block text-[11px] font-medium text-slate-500 mb-1">Harga (Rp)</label>
-                <input type="number" id="menuPrice" required placeholder="15000" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs">
-              </div>
-              <div>
-                <label class="block text-[11px] font-medium text-slate-500 mb-1">Kategori</label>
-                <select id="menuCategory" required class="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white">
-                  <option value="Coffee">Coffee</option>
-                  <option value="Non-Coffee">Non-Coffee</option>
-                  <option value="Food">Food / Makanan</option>
-                  <option value="Snack">Snack / Cemilan</option>
-                  <option value="Manual Brew">Manual Brew</option>
-                  <option value="Additional">Additional / Add-on</option>
-                </select>
-              </div>
+    <!-- Main Container -->
+    <div id="mainContent" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <i data-lucide="shield-check" class="text-indigo-600 w-8 h-8"></i>
+                <h1 class="text-xl font-bold text-gray-800">Admin Megar POS</h1>
             </div>
-            <div class="flex gap-2 justify-end">
-              <button type="button" onclick="resetMenuForm()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-medium">Batal</button>
-              <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm">Simpan Menu</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- DAFTAR MENU -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold text-slate-800 text-sm">Daftar Menu Aktif & Nonaktif</h3>
-            <button onclick="loadMenuItems()" class="text-xs text-indigo-600 font-medium hover:underline">🔄 Refresh</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-50 text-slate-400 uppercase font-semibold text-[10px]">
-                <tr>
-                  <th class="p-2">Nama</th>
-                  <th class="p-2">Kategori</th>
-                  <th class="p-2">Harga</th>
-                  <th class="p-2">Status</th>
-                  <th class="p-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="menuTableList" class="divide-y divide-slate-100">
-                <tr><td colspan="5" class="p-4 text-center text-slate-400">Memuat daftar menu...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: KELOLA KASIR -->
-      <section id="tab-cashier" class="tab-content space-y-4 hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 space-y-3">
-          <h3 class="font-bold text-slate-800 text-sm">Tambah Account Kasir</h3>
-          <form id="formCashier" onsubmit="event.preventDefault(); saveCashier();" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input type="text" id="cashierName" required placeholder="Nama Kasir" class="p-2.5 rounded-xl border border-slate-300 text-xs">
-            <input type="password" id="cashierPin" required placeholder="PIN / Passkey Kasir" class="p-2.5 rounded-xl border border-slate-300 text-xs">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition">
-              + Tambah Kasir
+            <button onclick="logoutAdmin()" class="text-sm bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition flex items-center space-x-1">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Keluar</span>
             </button>
-          </form>
-        </div>
+        </header>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4">
-          <h3 class="font-bold text-slate-800 text-sm mb-3">Daftar Kasir</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-              <thead class="bg-slate-50 text-slate-400 uppercase font-semibold text-[10px]">
-                <tr>
-                  <th class="p-2">Nama Kasir</th>
-                  <th class="p-2">PIN</th>
-                  <th class="p-2">Status</th>
-                  <th class="p-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="cashierTableList" class="divide-y divide-slate-100">
-                <tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat data kasir...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b px-6 flex space-x-8">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn py-4 text-sm font-semibold text-gray-500 hover:text-indigo-600 flex items-center space-x-2 tab-active">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Overview</span>
+            </button>
+            <button onclick="switchTab('transactions')" id="tab-transactions" class="tab-btn py-4 text-sm font-semibold text-gray-500 hover:text-indigo-600 flex items-center space-x-2">
+                <i data-lucide="receipt" class="w-4 h-4"></i>
+                <span>Transaksi</span>
+            </button>
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="tab-btn py-4 text-sm font-semibold text-gray-500 hover:text-indigo-600 flex items-center space-x-2">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>Mingguan</span>
+            </button>
+            <button onclick="switchTab('menu')" id="tab-menu" class="tab-btn py-4 text-sm font-semibold text-gray-500 hover:text-indigo-600 flex items-center space-x-2">
+                <i data-lucide="coffee" class="w-4 h-4"></i>
+                <span>Menu</span>
+            </button>
+            <button onclick="switchTab('cashier')" id="tab-cashier" class="tab-btn py-4 text-sm font-semibold text-gray-500 hover:text-indigo-600 flex items-center space-x-2">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                <span>Kasir</span>
+            </button>
+        </nav>
 
-  </div>
+        <!-- Content Area -->
+        <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
 
-  <!-- SCRIPT UTAMA MEGAR POS ADMIN -->
-  <script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT WEB APP DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec";
+            <!-- TAB 1: OVERVIEW -->
+            <div id="content-overview" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border shadow-sm flex items-center space-x-4">
+                        <div class="bg-indigo-50 p-4 rounded-xl text-indigo-600">
+                            <i data-lucide="banknote" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Omzet Hari Ini</p>
+                            <h3 id="statOmzet" class="text-2xl font-bold text-gray-800">Rp 0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border shadow-sm flex items-center space-x-4">
+                        <div class="bg-emerald-50 p-4 rounded-xl text-emerald-600">
+                            <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Jumlah Transaksi Hari Ini</p>
+                            <h3 id="statCount" class="text-2xl font-bold text-gray-800">0 Transaksi</h3>
+                        </div>
+                    </div>
+                </div>
 
-    // INIALISASI KETIKA DOKUMEN LOADED
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("currentDateDisplay").innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      checkSession();
-    });
+                <!-- Quick Action Buttons -->
+                <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+                    <h4 class="font-bold text-gray-800">Aksi Cepat</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="syncDriveReport()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-100 transition flex items-center space-x-2">
+                            <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                            <span>Sync Laporan ke Drive</span>
+                        </button>
+                        <button onclick="openModalArabika()" class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-100 transition flex items-center space-x-2">
+                            <i data-lucide="flame" class="w-4 h-4"></i>
+                            <span>Set Harga Arabika Harian</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    // VERIFIKASI Awal SESSION/PASSKEY
-    function checkSession() {
-      const isAdminLoggedIn = sessionStorage.getItem("megar_admin_logged");
-      if (isAdminLoggedIn === "true") {
-        document.getElementById("modalPasskey").classList.add("hidden");
-        document.getElementById("dashboardApp").classList.remove("hidden");
-        loadOverviewData();
-      }
-    }
+            <!-- TAB 2: TRANSAKSI HARIAN -->
+            <div id="content-transactions" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-lg">Riwayat Transaksi Hari Ini</h3>
+                    <button onclick="loadTransactions()" class="text-sm text-indigo-600 hover:underline flex items-center space-x-1">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b text-gray-500">
+                            <tr>
+                                <th class="p-4">Waktu</th>
+                                <th class="p-4">Kasir</th>
+                                <th class="p-4">Metode</th>
+                                <th class="p-4">Total</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listTransactions" class="divide-y">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat transaksi...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-    function verifyPasskeyAdmin() {
-      const pass = document.getElementById("inputPasskeyAdmin").value;
-      if (!pass) return alert("Masukkan Passkey!");
+            <!-- TAB 3: MINGGUAN -->
+            <div id="content-weekly" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-lg">
+                    <h3 class="font-bold text-lg">Rekap Penjualan</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Dari Tanggal</label>
+                            <input type="date" id="startDate" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Sampai Tanggal</label>
+                            <input type="date" id="endDate" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <button onclick="fetchRekapData()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Tampilkan Rekap</button>
+                    <div id="rekapResult" class="text-sm border-t pt-4 space-y-2 hidden"></div>
+                </div>
+            </div>
 
-      fetch(`${API_URL}?action=verifyAdminPasskey&passkey=${encodeURIComponent(pass)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "success") {
-            sessionStorage.setItem("megar_admin_logged", "true");
-            document.getElementById("modalPasskey").classList.add("hidden");
-            document.getElementById("dashboardApp").classList.remove("hidden");
-            loadOverviewData();
-          } else {
-            alert("Passkey Admin Salah!");
-          }
-        })
-        .catch(err => {
-          alert("Gagal memverifikasi Passkey. Cek koneksi Anda.");
-          console.error(err);
+            <!-- TAB 4: MENU -->
+            <div id="content-menu" class="hidden space-y-6">
+                <!-- Form Tambah/Edit Menu -->
+                <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg" id="formMenuTitle">Tambah Menu Baru</h3>
+                    <form id="formMenu" onsubmit="event.preventDefault(); saveMenu();" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="hidden" id="menuId">
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Nama Menu</label>
+                            <input type="text" id="menuName" required placeholder="Nama Menu" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Harga (Rp)</label>
+                            <input type="number" id="menuPrice" required placeholder="Harga" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Kategori</label>
+                            <select id="menuCategory" required class="w-full border p-2 rounded-lg text-sm bg-white">
+                                <option value="Coffee">Coffee</option>
+                                <option value="Non-Coffee">Non-Coffee</option>
+                                <option value="Food">Food / Makanan</option>
+                                <option value="Snack">Snack / Cemilan</option>
+                                <option value="Manual Brew">Manual Brew</option>
+                                <option value="Additional">Additional / Add-on</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end space-x-2">
+                            <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition text-sm">Simpan</button>
+                            <button type="button" onclick="resetMenuForm()" class="bg-gray-100 text-gray-600 py-2 px-3 rounded-lg hover:bg-gray-200 transition text-sm">Batal</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Daftar Menu -->
+                <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b text-gray-500">
+                            <tr>
+                                <th class="p-4">Nama</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4">Harga</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listMenu" class="divide-y">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat menu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: KASIR -->
+            <div id="content-cashier" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-lg">
+                    <h3 class="font-bold text-lg">Tambah Kasir Baru</h3>
+                    <form id="formCashier" onsubmit="event.preventDefault(); saveCashier();" class="space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">Nama Kasir</label>
+                            <input type="text" id="cashierName" required placeholder="Nama Kasir" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-gray-500">PIN / Passkey Kasir</label>
+                            <input type="password" id="cashierPin" required placeholder="PIN Kasir" class="w-full border p-2 rounded-lg text-sm">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Tambah Kasir</button>
+                    </form>
+                </div>
+
+                <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b text-gray-500">
+                            <tr>
+                                <th class="p-4">Nama</th>
+                                <th class="p-4">PIN</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listCashiers" class="divide-y">
+                            <tr><td colspan="4" class="p-4 text-center text-gray-400">Memuat kasir...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SCRIPT UTAMA -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkSession();
         });
-    }
 
-    function logoutAdmin() {
-      sessionStorage.removeItem("megar_admin_logged");
-      location.reload();
-    }
+        function checkSession() {
+            const logged = sessionStorage.getItem('megar_admin_logged');
+            if (logged === 'true') {
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadOverviewData();
+            }
+        }
 
-    // SWITCH TAB MANAGEMENT
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-      document.querySelectorAll(".tab-btn").forEach(el => {
-        el.classList.remove("bg-white", "text-indigo-600", "shadow-sm");
-        el.classList.add("hover:text-slate-900");
-      });
+        function loginAdmin() {
+            const pass = document.getElementById('inputPasskey').value;
+            if (!pass) return alert("Masukkan Passkey!");
+            
+            fetch(`${API_URL}?action=verifyAdminPasskey&passkey=${encodeURIComponent(pass)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        sessionStorage.setItem('megar_admin_logged', 'true');
+                        document.getElementById('authOverlay').classList.add('hidden');
+                        document.getElementById('mainContent').classList.remove('hidden');
+                        loadOverviewData();
+                    } else {
+                        alert("Passkey Admin Salah!");
+                    }
+                })
+                .catch(() => alert("Gagal koneksi ke server."));
+        }
 
-      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
-      const btn = document.getElementById(`tabBtn-${tabName}`);
-      btn.classList.add("bg-white", "text-indigo-600", "shadow-sm");
+        function logoutAdmin() {
+            sessionStorage.removeItem('megar_admin_logged');
+            location.reload();
+        }
 
-      // Auto load tab content
-      if (tabName === 'overview') loadOverviewData();
-      if (tabName === 'transactions') loadTransactions();
-      if (tabName === 'menu') loadMenuItems();
-      if (tabName === 'cashier') loadCashiers();
-    }
+        function switchTab(tabName) {
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
 
-    // LOAD OVERVIEW
-    function loadOverviewData() {
-      fetch(`${API_URL}?action=getTodaySummary`)
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById("todayOmzet").innerText = "Rp " + (data.totalOmzet || 0).toLocaleString('id-ID');
-          document.getElementById("todayCount").innerText = (data.totalCount || 0) + " Transaksi";
-        })
-        .catch(err => console.error(err));
-    }
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('tab-active');
 
-    // MANAJEMEN MENU
-    function loadMenuItems() {
-      const tbody = document.getElementById("menuTableList");
-      tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Memuat menu...</td></tr>`;
+            if (tabName === 'overview') loadOverviewData();
+            if (tabName === 'transactions') loadTransactions();
+            if (tabName === 'menu') loadMenuItems();
+            if (tabName === 'cashier') loadCashiers();
+        }
 
-      fetch(`${API_URL}?action=getMenuItems`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada menu.</td></tr>`;
-            return;
-          }
-          tbody.innerHTML = data.map(item => `
-            <tr class="hover:bg-slate-50">
-              <td class="p-2 font-medium text-slate-800">${item.name}</td>
-              <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 font-semibold">${item.category}</span></td>
-              <td class="p-2">Rp ${Number(item.price).toLocaleString('id-ID')}</td>
-              <td class="p-2">
-                <span class="px-2 py-0.5 rounded-full text-[10px] ${item.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                  ${item.active ? 'Aktif' : 'Nonaktif'}
-                </span>
-              </td>
-              <td class="p-2 text-right space-x-1">
-                <button onclick="toggleMenuStatus('${item.id}', ${!item.active})" class="text-[10px] px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">
-                  ${item.active ? 'Nonaktifkan' : 'Aktifkan'}
-                </button>
-                <button onclick="deleteMenu('${item.id}')" class="text-[10px] px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200">Hapus</button>
-              </td>
-            </tr>
-          `).join('');
-        });
-    }
+        function loadOverviewData() {
+            fetch(`${API_URL}?action=getTodaySummary`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('statOmzet').innerText = "Rp " + (data.totalOmzet || 0).toLocaleString('id-ID');
+                    document.getElementById('statCount').innerText = (data.totalCount || 0) + " Transaksi";
+                });
+        }
 
-    function saveMenu() {
-      const id = document.getElementById("menuId").value;
-      const name = document.getElementById("menuName").value;
-      const price = document.getElementById("menuPrice").value;
-      const category = document.getElementById("menuCategory").value;
+        function loadTransactions() {
+            const tbody = document.getElementById('listTransactions');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat transaksi...</td></tr>`;
 
-      const payload = { id, name, price, category };
+            fetch(`${API_URL}?action=getTodayTransactions`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada transaksi hari ini.</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = data.map(t => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 font-mono text-xs">${t.time}</td>
+                            <td class="p-4 font-medium">${t.cashier}</td>
+                            <td class="p-4"><span class="px-2 py-1 bg-gray-100 text-xs font-semibold rounded">${t.paymentMethod}</span></td>
+                            <td class="p-4 font-semibold">Rp ${Number(t.total).toLocaleString('id-ID')}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="voidTransaction('${t.id}')" class="text-xs text-red-600 hover:underline">Void</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
 
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "saveMenuItem", data: payload })
-      })
-      .then(res => res.json())
-      .then(res => {
-        alert("Menu berhasil disimpan!");
-        resetMenuForm();
-        loadMenuItems();
-      })
-      .catch(err => alert("Gagal menyimpan menu."));
-    }
+        function loadMenuItems() {
+            const tbody = document.getElementById('listMenu');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat menu...</td></tr>`;
 
-    function toggleMenuStatus(id, newStatus) {
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "toggleMenuStatus", id: id, active: newStatus })
-      })
-      .then(res => res.json())
-      .then(() => loadMenuItems());
-    }
+            fetch(`${API_URL}?action=getMenuItems`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Tidak ada menu.</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = data.map(m => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 font-medium">${m.name}</td>
+                            <td class="p-4"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded">${m.category}</span></td>
+                            <td class="p-4">Rp ${Number(m.price).toLocaleString('id-ID')}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded ${m.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${m.active ? 'Aktif' : 'Nonaktif'}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right space-x-2">
+                                <button onclick="toggleMenuStatus('${m.id}', ${!m.active})" class="text-xs text-gray-600 hover:underline">
+                                    ${m.active ? 'Nonaktifkan' : 'Aktifkan'}
+                                </button>
+                                <button onclick="deleteMenu('${m.id}')" class="text-xs text-red-600 hover:underline">Hapus</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
 
-    function deleteMenu(id) {
-      if (!confirm("Yakin ingin menghapus menu ini?")) return;
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "deleteMenuItem", id: id })
-      })
-      .then(res => res.json())
-      .then(() => loadMenuItems());
-    }
+        function saveMenu() {
+            const id = document.getElementById('menuId').value;
+            const name = document.getElementById('menuName').value;
+            const price = document.getElementById('menuPrice').value;
+            const category = document.getElementById('menuCategory').value;
 
-    function resetMenuForm() {
-      document.getElementById("menuId").value = "";
-      document.getElementById("menuName").value = "";
-      document.getElementById("menuPrice").value = "";
-    }
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'saveMenuItem', data: { id, name, price, category } })
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert('Menu berhasil disimpan!');
+                resetMenuForm();
+                loadMenuItems();
+            });
+        }
 
-    // MANAJEMEN KASIR
-    function loadCashiers() {
-      const tbody = document.getElementById("cashierTableList");
-      tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat data kasir...</td></tr>`;
+        function toggleMenuStatus(id, newStatus) {
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'toggleMenuStatus', id, active: newStatus })
+            }).then(() => loadMenuItems());
+        }
 
-      fetch(`${API_URL}?action=getCashiers`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada kasir tersimpan.</td></tr>`;
-            return;
-          }
-          tbody.innerHTML = data.map(c => `
-            <tr class="hover:bg-slate-50">
-              <td class="p-2 font-medium text-slate-800">${c.name}</td>
-              <td class="p-2 font-mono text-xs">••••</td>
-              <td class="p-2">
-                <span class="px-2 py-0.5 rounded-full text-[10px] ${c.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                  ${c.active ? 'Aktif' : 'Nonaktif'}
-                </span>
-              </td>
-              <td class="p-2 text-right">
-                <button onclick="toggleCashierStatus('${c.id}', ${!c.active})" class="text-[10px] px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">
-                  ${c.active ? 'Nonaktifkan' : 'Aktifkan'}
-                </button>
-              </td>
-            </tr>
-          `).join('');
-        });
-    }
+        function deleteMenu(id) {
+            if (!confirm('Yakin hapus menu ini?')) return;
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'deleteMenuItem', id })
+            }).then(() => loadMenuItems());
+        }
 
-    function saveCashier() {
-      const name = document.getElementById("cashierName").value;
-      const pin = document.getElementById("cashierPin").value;
+        function resetMenuForm() {
+            document.getElementById('menuId').value = '';
+            document.getElementById('menuName').value = '';
+            document.getElementById('menuPrice').value = '';
+        }
 
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "saveCashier", data: { name, pin } })
-      })
-      .then(res => res.json())
-      .then(() => {
-        alert("Kasir berhasil ditambahkan!");
-        document.getElementById("cashierName").value = "";
-        document.getElementById("cashierPin").value = "";
-        loadCashiers();
-      });
-    }
+        function loadCashiers() {
+            const tbody = document.getElementById('listCashiers');
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Memuat kasir...</td></tr>`;
 
-    function toggleCashierStatus(id, status) {
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "toggleCashierStatus", id, active: status })
-      })
-      .then(res => res.json())
-      .then(() => loadCashiers());
-    }
+            fetch(`${API_URL}?action=getCashiers`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Tidak ada data kasir.</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = data.map(c => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 font-medium">${c.name}</td>
+                            <td class="p-4 font-mono text-xs">••••</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded ${c.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${c.active ? 'Aktif' : 'Nonaktif'}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <button onclick="toggleCashierStatus('${c.id}', ${!c.active})" class="text-xs text-gray-600 hover:underline">
+                                    ${c.active ? 'Nonaktifkan' : 'Aktifkan'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
 
-    // EKSPOST/SYNC LAPORAN TO DRIVE
-    function syncDriveReport() {
-      alert("Menghubungi Google Drive untuk export laporan...");
-      fetch(`${API_URL}?action=syncDriveReport`)
-        .then(res => res.json())
-        .then(res => alert(res.message || "Laporan berhasil diexport/synced!"))
-        .catch(() => alert("Gagal melakukan sync laporan ke Drive."));
-    }
+        function saveCashier() {
+            const name = document.getElementById('cashierName').value;
+            const pin = document.getElementById('cashierPin').value;
 
-    function openModalArabika() {
-      const price = prompt("Masukkan Harga Arabika / Manual Brew Harian Baru (Rp):");
-      if (price) {
-        fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "updateArabikaPrice", price: Number(price) })
-        })
-        .then(res => res.json())
-        .then(() => alert("Harga Arabika Harian berhasil diupdate!"));
-      }
-    }
-  </script>
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'saveCashier', data: { name, pin } })
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert('Kasir berhasil ditambahkan!');
+                document.getElementById('cashierName').value = '';
+                document.getElementById('cashierPin').value = '';
+                loadCashiers();
+            });
+        }
+
+        function toggleCashierStatus(id, active) {
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'toggleCashierStatus', id, active })
+            }).then(() => loadCashiers());
+        }
+
+        function syncDriveReport() {
+            alert("Memproses sync laporan...");
+            fetch(`${API_URL}?action=syncDriveReport`)
+                .then(r => r.json())
+                .then(res => alert(res.message || "Laporan berhasil di-sync!"));
+        }
+
+        function openModalArabika() {
+            const price = prompt("Masukkan harga Arabika harian baru (Rp):");
+            if (price) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateArabikaPrice', price: Number(price) })
+                }).then(() => alert("Harga Arabika diperbarui!"));
+            }
+        }
+    </script>
 </body>
 </html>
