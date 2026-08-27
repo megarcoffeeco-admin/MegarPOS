@@ -384,6 +384,7 @@ if (!raw) {
 }
 
 function renderNota(d) {
+  const isExpense = d.tipe === 'expense';
   const now = new Date();
   const tgl = d.timestamp
     ? new Date(d.timestamp).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
@@ -407,10 +408,15 @@ function renderNota(d) {
     </div>
   ` : '';
 
+  const totalLabel = isExpense ? 'Nominal' : 'Total';
+  const metodeLabel = isExpense ? 'Kategori' : 'Metode Pembayaran';
+  const notaTitle = isExpense ? 'Catatan Pengeluaran' : 'Coffee &amp; Co';
+  const footerThanks = isExpense ? 'Catatan pengeluaran tersimpan' : 'Terima kasih atas kunjungannya!';
+
   document.getElementById('notaCard').innerHTML = `
     <div class="nota-header">
       <div class="nota-brand">Megar</div>
-      <div class="nota-tagline">Coffee &amp; Co</div>
+      <div class="nota-tagline">${notaTitle}</div>
     </div>
 
     <div class="nota-body">
@@ -429,11 +435,11 @@ function renderNota(d) {
       <hr class="nota-divider" />
 
       <div class="nota-total-row">
-        <span class="nota-total-label">Total</span>
+        <span class="nota-total-label">${totalLabel}</span>
         <span class="nota-total-amount">${formatRp(d.total)}</span>
       </div>
       <div class="nota-metode-row">
-        <span class="nota-metode-label">Metode Pembayaran</span>
+        <span class="nota-metode-label">${metodeLabel}</span>
         <span class="nota-metode-val">${d.metodeBayar}</span>
       </div>
 
@@ -443,7 +449,7 @@ function renderNota(d) {
     <div class="perforated"></div>
 
     <div class="nota-footer">
-      <div class="nota-thanks">Terima kasih atas kunjungannya!</div>
+      <div class="nota-thanks">${footerThanks}</div>
       <div class="nota-footer-sub">Megar — Coffee & Co</div>
     </div>
   `;
@@ -493,7 +499,15 @@ document.getElementById('screenshotBtn').addEventListener('click', async () => {
 
 // ── Back ──
 document.getElementById('backBtn').addEventListener('click', () => {
-  window.location.replace('pos-megar-transaksi.html');
+  const raw = sessionStorage.getItem('megar_last_nota');
+  let dest = 'pos-megar-transaksi.html';
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      if (d.tipe === 'expense') dest = 'pos-megar-expense.html';
+    } catch(e) {}
+  }
+  window.location.replace(dest);
 });
 
 // ── Helpers ──

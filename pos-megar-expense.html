@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+<script>
+  // SECURITY GUARD — runs before anything else
+  (function() {
+    var kasir = sessionStorage.getItem('megar_kasir');
+    var pk = sessionStorage.getItem('megar_passkey');
+    if (!kasir || !pk) {
+      window.location.replace('index.html');
+    }
+  })();
+</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Megar POS" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1e3a1e" />
+  <title>Pengeluaran — Megar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep:   #1e3a1e;
+      --green-mid:    #2d4a2d;
+      --green-soft:   #4a7c4a;
+      --green-light:  #7aab6e;
+      --green-pale:   #e8f2e8;
+      --green-pale2:  #f0f7f0;
+      --cream:        #f5f0e8;
+      --cream-dark:   #e8e0d0;
+      --warm-white:   #fdfaf5;
+      --brown:        #8b6340;
+      --text-dark:    #1a2e1a;
+      --text-mid:     #3d5c3d;
+      --text-light:   #7a9a7a;
+      --text-faint:   #aac4aa;
+      --error:        #c0392b;
+      --error-light:  #fdecea;
+      --shadow:       rgba(30,58,30,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--green-pale2);
+      color: var(--text-dark);
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: var(--green-deep);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--cream);
+      font-weight: 700;
+    }
+    .topbar-kasir {
+      font-size: 11px;
+      color: var(--green-light);
+      letter-spacing: 0.5px;
+      margin-top: 1px;
+    }
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.08);
+      border: none;
+      border-radius: 10px;
+      color: var(--cream);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── Page ── */
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+    }
+    .page-sub {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+
+    /* ── Form Card ── */
+    .form-card {
+      background: white;
+      border-radius: 18px;
+      border: 1px solid var(--cream-dark);
+      box-shadow: 0 4px 20px var(--shadow);
+      padding: 22px 20px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-of-type { margin-bottom: 0; }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .form-select, .form-input, .form-textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dark);
+      background: var(--warm-white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-select:focus, .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--green-soft);
+      box-shadow: 0 0 0 4px rgba(74,124,74,0.10);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-faint); }
+
+    .nominal-wrap { position: relative; }
+    .nominal-prefix {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-light);
+      pointer-events: none;
+    }
+    .nominal-input {
+      padding-left: 40px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .form-textarea {
+      resize: none;
+      height: 64px;
+    }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 22px;
+      padding: 16px;
+      background: linear-gradient(145deg, var(--green-mid), var(--green-soft));
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 20px var(--shadow);
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 26px var(--shadow); }
+    .btn-submit:active { transform: translateY(1px); }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-submit .btn-text { transition: opacity 0.2s; }
+    .btn-submit .btn-loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .btn-submit.loading .btn-text { opacity: 0; }
+    .btn-submit.loading .btn-loader { opacity: 1; }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Inline error ── */
+    .form-error {
+      margin-top: 14px;
+      padding: 11px 14px;
+      background: var(--error-light);
+      border: 1px solid rgba(192,57,43,0.25);
+      border-radius: 10px;
+      font-size: 12.5px;
+      color: var(--error);
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-error.show { display: flex; }
+
+    /* ── Success screen ── */
+    .success-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--green-mid);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .success-screen.show { opacity: 1; pointer-events: all; }
+    .success-circle {
+      width: 76px; height: 76px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .success-nota {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      color: var(--green-light);
+      letter-spacing: 1px;
+    }
+    .success-nominal {
+      font-family: 'Playfair Display', serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: white;
+    }
+    .success-item {
+      font-size: 13px;
+      color: rgba(245,240,232,0.7);
+      margin-top: -4px;
+    }
+    .success-kategori {
+      font-size: 11px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(245,240,232,0.85);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+    .success-wa-btn {
+      margin-top: 18px;
+      padding: 12px 28px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .success-nota-btn {
+      margin-top: 8px;
+      padding: 12px 28px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .success-next-btn {
+      margin-top: 8px;
+      padding: 12px 28px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(245,240,232,0.8);
+      border: none;
+      border-radius: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-brand">Megar</div>
+    <div class="topbar-kasir" id="kasirLabel">Memuat...</div>
+  </div>
+  <button class="btn-icon" id="logoutBtn" title="Logout">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  </button>
+</div>
+
+<div class="page">
+  <div class="page-title">Catat Pengeluaran</div>
+  <div class="page-sub">Isi rincian pengeluaran, lalu simpan</div>
+
+  <div class="form-card">
+    <div class="form-group">
+      <label class="form-label" for="kategoriSelect">Kategori</label>
+      <select class="form-select" id="kategoriSelect">
+        <option value="Operasional Harian">Operasional Harian</option>
+        <option value="Operasional Bulanan">Operasional Bulanan (listrik, internet, gaji)</option>
+        <option value="Belanja Bahan">Belanja Bahan</option>
+        <option value="Belanja Perlengkapan">Belanja Perlengkapan</option>
+        <option value="Biaya Penyusutan">Biaya Penyusutan</option>
+        <option value="Marketing & Promosi">Marketing & Promosi</option>
+        <option value="Lain-lain">Lain-lain</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="itemInput">Item</label>
+      <input class="form-input" id="itemInput" type="text" placeholder="Contoh: Gas 3kg, Es Batu, Aqua Galon" maxlength="80" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="nominalInput">Nominal</label>
+      <div class="nominal-wrap">
+        <span class="nominal-prefix">Rp</span>
+        <input class="form-input nominal-input" id="nominalInput" type="number" placeholder="0" min="0" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="catatanInput">Catatan <span style="text-transform:none;font-weight:400;">(opsional)</span></label>
+      <textarea class="form-textarea" id="catatanInput" placeholder="Contoh: beli di warung Bu Siti"></textarea>
+    </div>
+
+    <button class="btn-submit" id="btnSimpan">
+      <span class="btn-text">Simpan Pengeluaran</span>
+      <span class="btn-loader"><div class="spinner"></div></span>
+    </button>
+
+    <div class="form-error" id="formError">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="formErrorText">Terjadi kesalahan.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Success Screen -->
+<div class="success-screen" id="successScreen">
+  <div class="success-circle">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-nota" id="successNota">EXP-2026-08-0001</div>
+  <div class="success-nominal" id="successNominal">Rp 0</div>
+  <div class="success-item" id="successItem">Item</div>
+  <div class="success-kategori" id="successKategori">Kategori</div>
+  <button class="success-wa-btn" id="waBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Kirim ke WhatsApp
+  </button>
+  <button class="success-nota-btn" id="notaBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+    Lihat Nota
+  </button>
+  <button class="success-next-btn" id="nextBtn">Catat Lagi</button>
+</div>
+
+<script>
+// ══════════════════════════════════
+// CONFIG
+// ══════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0q38WFDttdXQsmqSG2AYtjiynwpSLwiIyl0R3CiVpr8Ni6Q/exec';
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let kasir = null;
+let passkey = '';
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const sesiRaw = sessionStorage.getItem('megar_kasir');
+  passkey = sessionStorage.getItem('megar_passkey') || '';
+  if (!sesiRaw || !passkey) {
+    window.location.href = 'index.html';
+    return;
+  }
+  kasir = JSON.parse(sesiRaw);
+  document.getElementById('kasirLabel').textContent = kasir.nama;
+
+  // Back button selalu ke login
+  history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', function() {
+    window.location.replace('index.html');
+  });
+  window.addEventListener('pageshow', function() {
+    if (!sessionStorage.getItem('megar_kasir')) {
+      window.location.replace('index.html');
+    }
+  });
+
+  bindEvents();
+});
+
+// ══════════════════════════════════
+// EVENTS
+// ══════════════════════════════════
+function bindEvents() {
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('Yakin ingin logout?')) {
+      sessionStorage.clear();
+      window.location.replace('index.html');
+    }
+  });
+
+  document.getElementById('btnSimpan').addEventListener('click', handleSimpan);
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    document.getElementById('successScreen').classList.remove('show');
+    resetForm();
+  });
+
+  ['itemInput', 'nominalInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', hideError);
+  });
+}
+
+// ══════════════════════════════════
+// SIMPAN
+// ══════════════════════════════════
+async function handleSimpan() {
+  const kategori = document.getElementById('kategoriSelect').value;
+  const item = document.getElementById('itemInput').value.trim();
+  const nominal = parseInt(document.getElementById('nominalInput').value);
+  const catatan = document.getElementById('catatanInput').value.trim();
+
+  if (!item) {
+    showError('Item wajib diisi.');
+    document.getElementById('itemInput').focus();
+    return;
+  }
+  if (!nominal || nominal <= 0) {
+    showError('Nominal harus lebih dari 0.');
+    document.getElementById('nominalInput').focus();
+    return;
+  }
+
+  hideError();
+  setLoading(true);
+
+  const payloadObj = {
+    action: 'saveExpense',
+    passkey: passkey,
+    kategori: kategori,
+    item: item,
+    nominal: nominal,
+    catatan: catatan
+  };
+
+  try {
+    const payload = encodeURIComponent(JSON.stringify(payloadObj));
+    const res = await fetch(`${API_URL}?payload=${payload}`);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      showSuccessScreen(data.noNota, nominal, item, kategori, catatan);
+    } else {
+      showError(data.message || 'Gagal menyimpan. Coba lagi.');
+    }
+  } catch (e) {
+    showError('Gagal terhubung ke server. Periksa koneksi internet, lalu coba lagi.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(state) {
+  const btn = document.getElementById('btnSimpan');
+  btn.disabled = state;
+  btn.classList.toggle('loading', state);
+}
+
+function showError(msg) {
+  document.getElementById('formErrorText').textContent = msg;
+  document.getElementById('formError').classList.add('show');
+}
+function hideError() {
+  document.getElementById('formError').classList.remove('show');
+}
+
+function resetForm() {
+  document.getElementById('kategoriSelect').value = 'Operasional Harian';
+  document.getElementById('itemInput').value = '';
+  document.getElementById('nominalInput').value = '';
+  document.getElementById('catatanInput').value = '';
+  hideError();
+  document.getElementById('itemInput').focus();
+}
+
+// ══════════════════════════════════
+// SUCCESS SCREEN
+// ══════════════════════════════════
+function showSuccessScreen(noNota, nominal, item, kategori, catatan) {
+  document.getElementById('successNota').textContent = noNota;
+  document.getElementById('successNominal').textContent = formatRp(nominal);
+  document.getElementById('successItem').textContent = item;
+  document.getElementById('successKategori').textContent = kategori;
+
+  // Simpan data nota ke sessionStorage — reuse halaman nota yang sudah ada
+  const notaData = {
+    noNota,
+    tipe: 'expense',
+    total: nominal,
+    metodeBayar: kategori,
+    items: [{ nama: item, qty: 1, subtotal: nominal }],
+    notes: catatan,
+    kasirNama: kasir.nama,
+    timestamp: new Date().toISOString()
+  };
+  sessionStorage.setItem('megar_last_nota', JSON.stringify(notaData));
+
+  const waText = buildWAText(noNota, item, nominal, kategori, catatan);
+  document.getElementById('waBtn').onclick = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank');
+  };
+
+  document.getElementById('notaBtn').onclick = () => {
+    window.location.href = 'pos-megar-nota.html';
+  };
+
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function buildWAText(noNota, item, nominal, kategori, catatan) {
+  const now = new Date();
+  const tgl = now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  const jam = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+
+  let txt = `📋 *Catatan Pengeluaran — Megar*\n`;
+  txt += `📋 Nota: ${noNota}\n`;
+  txt += `🕐 ${tgl}, ${jam}\n`;
+  txt += `👤 Dicatat oleh: ${kasir.nama}\n\n`;
+  txt += `📂 Kategori: ${kategori}\n`;
+  txt += `🧾 Item: ${item}\n`;
+  txt += `💰 Nominal: ${formatRp(nominal)}\n`;
+  if (catatan) txt += `📝 Catatan: ${catatan}\n`;
+  return txt;
+}
+
+// ══════════════════════════════════
+// HELPERS
+// ══════════════════════════════════
+function formatRp(num) {
+  return 'Rp ' + Number(num).toLocaleString('id-ID');
+}
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>

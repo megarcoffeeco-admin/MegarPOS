@@ -311,6 +311,71 @@
       font-size: 11px;
       font-style: italic;
     }
+    .price-editable {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      min-width: 72px;
+    }
+    .price-editable:hover {
+      background: var(--green-pale2);
+    }
+    .price-editable .price-edit-icon {
+      color: var(--text-faint);
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .price-editable:hover .price-edit-icon {
+      color: var(--green-soft);
+    }
+    .price-editable.editing {
+      background: transparent;
+      cursor: default;
+      gap: 4px;
+    }
+    .price-edit-input {
+      width: 84px;
+      padding: 5px 7px;
+      border: 1.5px solid var(--green-soft);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      background: white;
+      text-align: right;
+    }
+    .price-edit-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74,124,74,0.15);
+    }
+    .price-save-btn, .price-cancel-btn {
+      width: 24px; height: 24px;
+      border: none;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .price-save-btn {
+      background: var(--green-pale);
+      color: var(--green-mid);
+    }
+    .price-save-btn:hover { background: var(--green-light); color: white; }
+    .price-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .price-cancel-btn {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    .price-cancel-btn:hover { background: var(--error); color: white; }
     .menu-row-actions {
       display: flex;
       align-items: center;
@@ -1029,6 +1094,20 @@
         <div class="trx-empty">Pilih tanggal dan klik Tampilkan</div>
       </div>
     </div>
+
+    <div class="section-title" style="margin-top:16px;">
+      📋 Rekap Pengeluaran Hari Ini
+      <span id="expenseFilterLabel">hari ini</span>
+    </div>
+    <div class="card">
+      <div style="padding:14px 16px 0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Staff</div>
+        <div id="expenseSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;"></div>
+      </div>
+      <div class="trx-list" id="expenseListFilter">
+        <div class="trx-empty">Memuat...</div>
+      </div>
+    </div>
   </div><!-- /tab-transaksi -->
 
   <!-- ══ TAB: MINGGUAN ══ -->
@@ -1507,11 +1586,13 @@ function bindEvents() {
   document.getElementById('btnToday').addEventListener('click', () => {
     document.getElementById('filterTanggal').value = today;
     loadTrxByDate(today);
+    loadExpenseByDate(today);
   });
   document.getElementById('btnFilterGo').addEventListener('click', () => {
     const tgl = document.getElementById('filterTanggal').value;
     if (!tgl) { showToast('Pilih tanggal dulu', true); return; }
     loadTrxByDate(tgl);
+    loadExpenseByDate(tgl);
   });
 
   // Weekly refresh
@@ -1708,6 +1789,7 @@ function initTabs() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('filterTanggal').value = today;
         loadTrxByDate(today);
+        loadExpenseByDate(today);
       }
     });
   });
@@ -1803,6 +1885,73 @@ async function loadTrxByDate(tanggal) {
     });
 
   } catch(e) {
+    list.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
+  }
+}
+
+// ══════════════════════════════════
+// PENGELUARAN FILTER (rekap per staff)
+// ══════════════════════════════════
+async function loadExpenseByDate(tanggal) {
+  const list = document.getElementById('expenseListFilter');
+  const summaryList = document.getElementById('expenseSummaryList');
+  list.innerHTML = '<div class="trx-empty">Memuat...</div>';
+  summaryList.innerHTML = '';
+
+  const label = tanggal === new Date().toISOString().split('T')[0] ? 'hari ini' : tanggal;
+  document.getElementById('expenseFilterLabel').textContent = label;
+
+  try {
+    const res = await fetch(`${API_URL}?action=getTodayExpense&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`);
+    const data = await res.json();
+    const pengeluaran = data.pengeluaran || [];
+
+    if (pengeluaran.length === 0) {
+      list.innerHTML = '<div class="trx-empty">Tidak ada pengeluaran pada tanggal ini.</div>';
+      return;
+    }
+
+    // Rekap per staff (setiap baris = 1 catatan pengeluaran, tidak perlu group by nota)
+    const staffMap = {};
+    let totalPengeluaran = 0;
+    pengeluaran.forEach(row => {
+      const nama = row.kasirNama || 'Tidak diketahui';
+      if (!staffMap[nama]) staffMap[nama] = { count: 0, total: 0 };
+      staffMap[nama].count++;
+      staffMap[nama].total += Number(row.nominal);
+      totalPengeluaran += Number(row.nominal);
+    });
+
+    Object.entries(staffMap).forEach(([nama, d]) => {
+      const chip = document.createElement('div');
+      chip.style.cssText = 'background:var(--error-light);border:1px solid rgba(192,57,43,0.25);color:var(--error);border-radius:20px;padding:5px 12px;font-size:12px;';
+      chip.innerHTML = `<strong>${nama}</strong> · ${d.count} catatan · ${formatRp(d.total)}`;
+      summaryList.appendChild(chip);
+    });
+
+    // Total chip
+    const totalChip = document.createElement('div');
+    totalChip.style.cssText = 'background:var(--text-dark);color:white;border-radius:20px;padding:5px 12px;font-size:12px;';
+    totalChip.innerHTML = `Total Pengeluaran · ${formatRp(totalPengeluaran)}`;
+    summaryList.appendChild(totalChip);
+
+    // Render list, terbaru dulu
+    list.innerHTML = '';
+    [...pengeluaran].reverse().forEach(row => {
+      const div = document.createElement('div');
+      div.className = 'trx-row';
+      div.innerHTML = `
+        <div class="trx-nota">${String(row.noNota).split('-').slice(-1)[0]}</div>
+        <div class="trx-info">
+          <div class="trx-items">${row.item} <span style="color:var(--text-faint);">· ${row.kategori}</span></div>
+          <div class="trx-meta">${row.jam} · ${row.kasirNama}</div>
+        </div>
+        <div class="trx-total">${formatRp(row.nominal)}</div>
+      `;
+      list.appendChild(div);
+    });
+
+  } catch (e) {
     list.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
   }
 }
@@ -2046,14 +2195,20 @@ function renderMenuList2() {
   allMenu.forEach(item => {
     const row = document.createElement('div');
     row.className = 'menu-row';
+    const priceDisplay = item.harga_manual
+      ? `<div class="menu-row-price manual-tag">Manual</div>`
+      : `<div class="menu-row-price price-editable" data-id="${item.id}" data-harga="${item.harga}" title="Tap untuk edit harga">
+           <span class="price-view">${formatRp(item.harga)}</span>
+           <svg class="price-edit-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+           </svg>
+         </div>`;
     row.innerHTML = `
       <div class="menu-row-info">
         <div class="menu-row-name">${item.item}</div>
         <div class="menu-row-cat">${item.kategori}</div>
       </div>
-      <div class="menu-row-price ${item.harga_manual ? 'manual-tag' : ''}">
-        ${item.harga_manual ? 'Manual' : formatRp(item.harga)}
-      </div>
+      ${priceDisplay}
       <div class="menu-row-actions">
         <label class="row-toggle">
           <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="toggle-aktif2" />
@@ -2068,6 +2223,9 @@ function renderMenuList2() {
       </div>
     `;
     list.appendChild(row);
+  });
+  list.querySelectorAll('.price-editable').forEach(el => {
+    el.addEventListener('click', () => startEditPrice(el));
   });
   list.querySelectorAll('.toggle-aktif2').forEach(toggle => {
     toggle.addEventListener('change', async () => {
@@ -2085,6 +2243,70 @@ function renderMenuList2() {
       document.getElementById('deleteModal').classList.add('show');
     });
   });
+}
+
+function startEditPrice(el) {
+  // Jika ada elemen lain sedang diedit, batalkan dulu
+  const activeEdit = document.querySelector('.price-editable.editing');
+  if (activeEdit && activeEdit !== el) cancelEditPrice(activeEdit);
+
+  if (el.classList.contains('editing')) return; // sudah dalam mode edit
+  el.classList.add('editing');
+
+  const currentHarga = el.dataset.harga;
+  el.innerHTML = `
+    <input type="number" class="price-edit-input" value="${currentHarga}" min="0" />
+    <button class="price-save-btn" title="Simpan">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="price-cancel-btn" title="Batal">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  `;
+
+  const input = el.querySelector('.price-edit-input');
+  input.focus();
+  input.select();
+
+  const save = async () => {
+    const newHarga = parseInt(input.value);
+    if (!newHarga || newHarga <= 0) {
+      showToast('Harga tidak valid', true);
+      return;
+    }
+    const id = el.dataset.id;
+    el.querySelector('.price-save-btn').disabled = true;
+    const res = await apiPost({ action: 'updateDailyPrice', passkey: adminPasskey, id, harga: newHarga });
+    if (res && res.status === 'success') {
+      const item = allMenu.find(m => m.id === id);
+      if (item) item.harga = newHarga;
+      el.dataset.harga = newHarga;
+      showToast('Harga diperbarui ✓');
+      renderMenuList2();
+    } else {
+      showToast(res ? res.message : 'Gagal memperbarui harga', true);
+      cancelEditPrice(el);
+    }
+  };
+
+  el.querySelector('.price-save-btn').addEventListener('click', (e) => { e.stopPropagation(); save(); });
+  el.querySelector('.price-cancel-btn').addEventListener('click', (e) => { e.stopPropagation(); cancelEditPrice(el); });
+  input.addEventListener('click', (e) => e.stopPropagation());
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') save();
+    if (e.key === 'Escape') cancelEditPrice(el);
+  });
+}
+
+function cancelEditPrice(el) {
+  el.classList.remove('editing');
+  const harga = el.dataset.harga;
+  el.innerHTML = `
+    <span class="price-view">${formatRp(harga)}</span>
+    <svg class="price-edit-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+    </svg>
+  `;
 }
 
 

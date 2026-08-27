@@ -411,6 +411,8 @@
     </button>
 
     <div class="admin-link">
+      <button id="expenseBtn" type="button">Catat Pengeluaran</button>
+      <span style="color: var(--text-faint); font-size: 12px;"> &nbsp;·&nbsp; </span>
       <button id="adminBtn" type="button">Masuk sebagai Admin</button>
     </div>
 
@@ -438,6 +440,7 @@
   const passkeyInput = document.getElementById('passkey');
   const loginBtn     = document.getElementById('loginBtn');
   const adminBtn     = document.getElementById('adminBtn');
+  const expenseBtn   = document.getElementById('expenseBtn');
   const errorMsg     = document.getElementById('errorMsg');
   const toggleBtn    = document.getElementById('toggleBtn');
   const successOverlay = document.getElementById('successOverlay');
@@ -498,6 +501,46 @@
         // Redirect ke halaman transaksi setelah 1.8 detik
         setTimeout(() => {
           window.location.href = 'pos-megar-transaksi.html';
+        }, 1800);
+
+      } else {
+        showError(data.message || 'Passkey salah atau akun tidak aktif.');
+        passkeyInput.value = '';
+        passkeyInput.focus();
+      }
+
+    } catch (err) {
+      showError('Gagal terhubung ke server. Periksa koneksi internet.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── CATAT PENGELUARAN ──
+  expenseBtn.addEventListener('click', async () => {
+    const passkey = passkeyInput.value.trim();
+    if (!passkey) {
+      showError('Passkey tidak boleh kosong.');
+      passkeyInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}?action=login&passkey=${encodeURIComponent(passkey)}`);
+      const data = await res.json();
+
+      if (data.status === 'success') {
+        sessionStorage.setItem('megar_kasir', JSON.stringify(data.kasir));
+        sessionStorage.setItem('megar_passkey', passkey);
+
+        successName.textContent = `Halo, ${data.kasir.nama}!`;
+        successSub.textContent = 'Catat pengeluaran 📋';
+        successOverlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = 'pos-megar-expense.html';
         }, 1800);
 
       } else {
