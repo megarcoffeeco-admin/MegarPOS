@@ -498,6 +498,85 @@
       font-weight: 600;
     }
 
+    /* Uang Bayar / Kembalian */
+    .bayar-tunai-area {
+      margin-bottom: 10px;
+      display: none;
+    }
+    .bayar-tunai-area.show { display: block; }
+    .bayar-input-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .bayar-label {
+      font-size: 12px;
+      color: var(--text-mid);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .bayar-input-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 150px;
+    }
+    .bayar-prefix {
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      pointer-events: none;
+    }
+    .bayar-input {
+      width: 100%;
+      padding: 8px 10px 8px 30px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      background: var(--warm-white);
+      text-align: right;
+      transition: border-color 0.2s;
+    }
+    .bayar-input:focus {
+      outline: none;
+      border-color: var(--green-soft);
+    }
+    .bayar-input.insufficient {
+      border-color: var(--error);
+    }
+    .kembalian-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--green-pale);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .kembalian-row.insufficient {
+      background: var(--error-light);
+    }
+    .kembalian-label {
+      font-size: 12px;
+      color: var(--text-mid);
+      font-weight: 500;
+    }
+    .kembalian-amount {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+    .kembalian-row.insufficient .kembalian-amount {
+      color: var(--error);
+    }
+
     .btn-bayar {
       width: 100%;
       padding: 15px;
@@ -865,6 +944,19 @@
           <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
           <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
         </div>
+        <div class="bayar-tunai-area" id="bayarTunaiArea">
+          <div class="bayar-input-row">
+            <label class="bayar-label" for="uangBayarInput">Uang Bayar</label>
+            <div class="bayar-input-wrap">
+              <span class="bayar-prefix">Rp</span>
+              <input type="number" class="bayar-input" id="uangBayarInput" placeholder="0" min="0" />
+            </div>
+          </div>
+          <div class="kembalian-row" id="kembalianRow">
+            <span class="kembalian-label">Kembalian</span>
+            <span class="kembalian-amount" id="kembalianAmount">Rp 0</span>
+          </div>
+        </div>
         <button class="btn-bayar" id="btnBayar" disabled>
           <span class="btn-text">Bayar</span>
           <span class="btn-loader"><div class="spinner"></div></span>
@@ -912,6 +1004,19 @@
         <button class="metode-btn active" data-metode="Tunai">💵 Tunai</button>
         <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
         <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
+      </div>
+      <div class="bayar-tunai-area" id="drawerBayarTunaiArea">
+        <div class="bayar-input-row">
+          <label class="bayar-label" for="drawerUangBayarInput">Uang Bayar</label>
+          <div class="bayar-input-wrap">
+            <span class="bayar-prefix">Rp</span>
+            <input type="number" class="bayar-input" id="drawerUangBayarInput" placeholder="0" min="0" />
+          </div>
+        </div>
+        <div class="kembalian-row" id="drawerKembalianRow">
+          <span class="kembalian-label">Kembalian</span>
+          <span class="kembalian-amount" id="drawerKembalianAmount">Rp 0</span>
+        </div>
       </div>
       <button class="btn-bayar" id="drawerBtnBayar" disabled>
         <span class="btn-text">Bayar</span>
@@ -1202,6 +1307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadMenu();
   bindEvents();
+  updateKembalianAndButtons();
 
   // Sync jika ada pending saat buka aplikasi
   if (isOnline) setTimeout(autoSync, 2000);
@@ -1331,9 +1437,8 @@ function refreshAll() {
   document.getElementById('totalAmount').textContent = fmt;
   document.getElementById('drawerTotal').textContent = fmt;
 
-  // Bayar buttons
-  document.getElementById('btnBayar').disabled = !hasItems;
-  document.getElementById('drawerBtnBayar').disabled = !hasItems;
+  // Bayar buttons + kembalian (memperhitungkan uang bayar jika metode Tunai)
+  updateKembalianAndButtons();
 
   // FAB badge
   const badge = document.getElementById('cartBadge');
@@ -1346,6 +1451,44 @@ function refreshAll() {
 
   // Update badge di menu grid tanpa rebuild seluruh grid
   updateMenuBadges();
+}
+
+// ══════════════════════════════════
+// UANG BAYAR / KEMBALIAN
+// ══════════════════════════════════
+function updateKembalianAndButtons() {
+  const total = getTotal();
+  const hasItems = total > 0;
+  const isTunai = selectedMetode === 'Tunai';
+
+  // Tampilkan/sembunyikan area uang bayar — hanya relevan untuk Tunai
+  document.getElementById('bayarTunaiArea').classList.toggle('show', isTunai);
+  document.getElementById('drawerBayarTunaiArea').classList.toggle('show', isTunai);
+
+  let canPay = hasItems;
+
+  if (isTunai) {
+    const uangBayar = parseInt(document.getElementById('uangBayarInput').value) || 0;
+
+    const kembalian = uangBayar - total;
+    const insufficient = uangBayar > 0 && kembalian < 0;
+    const kembalianFmt = formatRp(Math.max(kembalian, 0));
+
+    [
+      { rowId: 'kembalianRow', amountId: 'kembalianAmount', inputId: 'uangBayarInput' },
+      { rowId: 'drawerKembalianRow', amountId: 'drawerKembalianAmount', inputId: 'drawerUangBayarInput' }
+    ].forEach(({ rowId, amountId, inputId }) => {
+      document.getElementById(amountId).textContent = kembalianFmt;
+      document.getElementById(rowId).classList.toggle('insufficient', insufficient);
+      document.getElementById(inputId).classList.toggle('insufficient', insufficient);
+    });
+
+    // Bayar hanya boleh jika uang bayar cukup (harus diisi dan >= total)
+    canPay = hasItems && uangBayar > 0 && uangBayar >= total;
+  }
+
+  document.getElementById('btnBayar').disabled = !canPay;
+  document.getElementById('drawerBtnBayar').disabled = !canPay;
 }
 
 function updateMenuBadges() {
@@ -1435,6 +1578,7 @@ function bindEvents() {
     });
     btn.classList.add('active');
     selectedMetode = btn.dataset.metode;
+    updateKembalianAndButtons();
   });
 
   // Metode bayar (drawer)
@@ -1447,6 +1591,19 @@ function bindEvents() {
     });
     btn.classList.add('active');
     selectedMetode = btn.dataset.metode;
+    updateKembalianAndButtons();
+  });
+
+  // Uang bayar (panel) — sinkron ke drawer, lalu hitung ulang kembalian
+  document.getElementById('uangBayarInput').addEventListener('input', (e) => {
+    document.getElementById('drawerUangBayarInput').value = e.target.value;
+    updateKembalianAndButtons();
+  });
+
+  // Uang bayar (drawer) — sinkron ke panel, lalu hitung ulang kembalian
+  document.getElementById('drawerUangBayarInput').addEventListener('input', (e) => {
+    document.getElementById('uangBayarInput').value = e.target.value;
+    updateKembalianAndButtons();
   });
 
   // Bayar buttons
@@ -1519,6 +1676,11 @@ async function handleBayar() {
   const notes = document.getElementById('notesInput').value ||
                 document.getElementById('drawerNotesInput').value;
 
+  // Uang bayar & kembalian — HANYA untuk tampilan checkout/nota, TIDAK dikirim ke backend/Sheets
+  const isTunai = selectedMetode === 'Tunai';
+  const uangBayar = isTunai ? (parseInt(document.getElementById('uangBayarInput').value) || 0) : null;
+  const kembalian = isTunai ? Math.max(uangBayar - getTotal(), 0) : null;
+
   const trxData = {
     action: 'saveTransaction',
     passkey: passkey,
@@ -1538,7 +1700,7 @@ async function handleBayar() {
       const localId = await saveTrxLocal(trxData);
       const noNota = 'TRX-OFFLINE-' + String(localId).padStart(4, '0');
       closeDrawer();
-      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true);
+      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true, uangBayar, kembalian);
       resetCart();
       await updateOnlineIndicator();
       showToast('Tersimpan offline — akan sync otomatis', 3000);
@@ -1558,7 +1720,7 @@ async function handleBayar() {
 
     if (data.status === 'success') {
       closeDrawer();
-      showSuccessScreen(data.noNota, getTotal(), selectedMetode, items, notes, false);
+      showSuccessScreen(data.noNota, getTotal(), selectedMetode, items, notes, false, uangBayar, kembalian);
       resetCart();
     } else {
       // Fallback simpan lokal jika server error
@@ -1573,7 +1735,7 @@ async function handleBayar() {
       const localId = await saveTrxLocal(trxData);
       const noNota = 'TRX-OFFLINE-' + String(localId).padStart(4, '0');
       closeDrawer();
-      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true);
+      showSuccessScreen(noNota, getTotal(), selectedMetode, items, notes, true, uangBayar, kembalian);
       resetCart();
       await updateOnlineIndicator();
     } catch(e2) {
@@ -1596,6 +1758,8 @@ function resetCart() {
   cart = {};
   document.getElementById('notesInput').value = '';
   document.getElementById('drawerNotesInput').value = '';
+  document.getElementById('uangBayarInput').value = '';
+  document.getElementById('drawerUangBayarInput').value = '';
   selectedMetode = 'Tunai';
   document.querySelectorAll('.metode-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.metode === 'Tunai');
@@ -1606,23 +1770,25 @@ function resetCart() {
 // ══════════════════════════════════
 // SUCCESS SCREEN
 // ══════════════════════════════════
-function showSuccessScreen(noNota, total, metode, items, notes, isOffline = false) {
+function showSuccessScreen(noNota, total, metode, items, notes, isOffline = false, uangBayar = null, kembalian = null) {
   document.getElementById('successNota').textContent = noNota;
   document.getElementById('successTotal').textContent = formatRp(total);
   document.getElementById('successMetode').textContent =
     metode + (isOffline ? ' · 📵 Tersimpan Offline' : ' · ✓ Tersync');
 
   // Simpan data nota ke sessionStorage untuk halaman nota
+  // uangBayar & kembalian HANYA untuk tampilan (checkout & nota) — tidak dikirim/tersimpan ke Google Sheets
   const notaData = {
     noNota, total, metodeBayar: metode,
     items, notes,
+    uangBayar, kembalian,
     kasirNama: kasir.nama,
     timestamp: new Date().toISOString()
   };
   sessionStorage.setItem('megar_last_nota', JSON.stringify(notaData));
 
   // WhatsApp
-  const waText = buildWAText(noNota, items, total, metode, notes, isOffline);
+  const waText = buildWAText(noNota, items, total, metode, notes, isOffline, uangBayar, kembalian);
   document.getElementById('waBtn').onclick = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank');
   };
@@ -1636,7 +1802,7 @@ function showSuccessScreen(noNota, total, metode, items, notes, isOffline = fals
   // Tidak auto-close — user klik manual via tombol 'Transaksi Berikutnya'
 }
 
-function buildWAText(noNota, items, total, metode, notes, isOffline = false) {
+function buildWAText(noNota, items, total, metode, notes, isOffline = false, uangBayar = null, kembalian = null) {
   const now = new Date();
   const tgl = now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
   const jam = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
@@ -1651,6 +1817,10 @@ function buildWAText(noNota, items, total, metode, notes, isOffline = false) {
   });
   txt += `\n*Total: ${formatRp(total)}*\n`;
   txt += `💳 ${metode}\n`;
+  if (uangBayar !== null && uangBayar !== undefined) {
+    txt += `💵 Uang Bayar: ${formatRp(uangBayar)}\n`;
+    txt += `💰 Kembalian: ${formatRp(kembalian)}\n`;
+  }
   if (notes) txt += `\n📝 ${notes}\n`;
   txt += `\nTerima kasih! 🌿`;
   return txt;

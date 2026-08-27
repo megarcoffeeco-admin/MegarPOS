@@ -413,6 +413,18 @@ function renderNota(d) {
   const notaTitle = isExpense ? 'Catatan Pengeluaran' : 'Coffee &amp; Co';
   const footerThanks = isExpense ? 'Catatan pengeluaran tersimpan' : 'Terima kasih atas kunjungannya!';
 
+  // Uang Bayar / Kembalian — hanya tampil kalau ada datanya (transaksi Tunai)
+  const bayarKembalianSection = (!isExpense && d.uangBayar !== null && d.uangBayar !== undefined) ? `
+    <div class="nota-metode-row">
+      <span class="nota-metode-label">Uang Bayar</span>
+      <span class="nota-metode-val">${formatRp(d.uangBayar)}</span>
+    </div>
+    <div class="nota-metode-row">
+      <span class="nota-metode-label">Kembalian</span>
+      <span class="nota-metode-val">${formatRp(d.kembalian)}</span>
+    </div>
+  ` : '';
+
   document.getElementById('notaCard').innerHTML = `
     <div class="nota-header">
       <div class="nota-brand">Megar</div>
@@ -442,6 +454,7 @@ function renderNota(d) {
         <span class="nota-metode-label">${metodeLabel}</span>
         <span class="nota-metode-val">${d.metodeBayar}</span>
       </div>
+      ${bayarKembalianSection}
 
       ${notesSection}
     </div>
