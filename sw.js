@@ -2,7 +2,7 @@
 // MEGAR POS — SERVICE WORKER
 // ============================================
 
-const CACHE_NAME = 'megar-pos-v5';
+const CACHE_NAME = 'megar-pos-v6';
 const ASSETS = [
   '/MegarPOS/',
   '/MegarPOS/index.html',
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Jangan cache halaman protected
-  const protectedPages = ['pos-megar-transaksi.html', 'pos-megar-admin.html', 'pos-megar-nota.html', 'pos-megar-expense.html'];
+  const protectedPages = ['pos-megar-transaksi.html', 'pos-megar-admin.html', 'pos-megar-nota.html'];
   if (protectedPages.some(p => url.pathname.includes(p))) {
     event.respondWith(fetch(event.request));
     return;
