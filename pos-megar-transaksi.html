@@ -513,11 +513,31 @@
     }
 
     /* Metode bayar */
+    .metode-group-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
     .metode-group {
       display: flex;
       gap: 6px;
-      margin-bottom: 10px;
+      flex: 1;
     }
+    .batal-bayar-btn {
+      flex-shrink: 0;
+      padding: 8px 10px;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .batal-bayar-btn:hover { border-color: var(--error); color: var(--error); }
     .metode-btn {
       flex: 1;
       padding: 8px 4px;
@@ -654,6 +674,25 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Footer dual-action: Checkout Langsung / Buka sebagai Open Bill ── */
+    .footer-action-group {
+      display: flex;
+      gap: 8px;
+    }
+    .footer-action-group .btn-bayar {
+      flex: 1;
+      font-size: 13.5px;
+      padding: 14px 8px;
+    }
+    .btn-openbill {
+      background: white;
+      color: var(--green-mid);
+      border: 1.5px solid var(--green-soft);
+      box-shadow: none;
+    }
+    .btn-openbill:hover { background: var(--green-pale); box-shadow: none; }
+    .btn-openbill:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* ── Cart FAB (HP only, dalam mode grid menu) ── */
     .cart-fab {
       position: fixed;
@@ -692,94 +731,65 @@
     /* ══════════════════════════════
        MAIN MENU (landing setelah login)
     ══════════════════════════════ */
-    .mainmenu-screen {
+    /* ══════════════════════════════
+       TAB BAR (pengganti Main Menu)
+    ══════════════════════════════ */
+    .tabbar {
+      display: flex;
+      flex-shrink: 0;
+      background: white;
+      border-bottom: 1.5px solid var(--cream-dark);
+    }
+    .tabbar-btn {
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow-y: auto;
-      background: var(--green-pale2);
-      padding: 24px 20px 40px;
-    }
-    .mainmenu-greeting {
-      text-align: center;
-      margin: 12px 0 28px;
-    }
-    .mainmenu-greeting-hi {
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .mainmenu-greeting-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-    .mainmenu-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-width: 440px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    .mainmenu-card {
-      display: flex;
       align-items: center;
-      gap: 16px;
-      background: white;
-      border: 1.5px solid var(--cream-dark);
-      border-radius: 18px;
-      padding: 18px 20px;
+      gap: 3px;
+      padding: 10px 4px 9px;
+      border: none;
+      background: transparent;
       cursor: pointer;
-      transition: all 0.18s;
-      text-align: left;
-    }
-    .mainmenu-card:hover {
-      border-color: var(--green-soft);
-      box-shadow: 0 6px 20px var(--shadow);
-      transform: translateY(-1px);
-    }
-    .mainmenu-card:active { transform: scale(0.98); }
-    .mainmenu-card-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
-      background: var(--green-pale);
-      color: var(--green-mid);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .mainmenu-card-text { flex: 1; min-width: 0; }
-    .mainmenu-card-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-    .mainmenu-card-sub {
-      font-size: 12px;
       color: var(--text-light);
-      margin-top: 2px;
+      position: relative;
+      transition: color 0.15s;
     }
-    .mainmenu-card-badge {
+    .tabbar-btn svg { transition: transform 0.15s; }
+    .tabbar-btn.active { color: var(--green-mid); }
+    .tabbar-btn.active svg { transform: translateY(-1px); }
+    .tabbar-btn-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .tabbar-btn.active .tabbar-btn-label { font-weight: 700; }
+    .tabbar-indicator {
+      position: absolute;
+      bottom: 0; left: 12px; right: 12px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--green-mid);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .tabbar-btn.active .tabbar-indicator { opacity: 1; }
+    .tabbar-btn-badge {
+      position: absolute;
+      top: 4px;
+      right: calc(50% - 20px);
       background: var(--brown);
       color: white;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      min-width: 22px;
-      height: 22px;
-      border-radius: 11px;
-      display: flex;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: none;
       align-items: center;
       justify-content: center;
-      padding: 0 6px;
-      flex-shrink: 0;
+      padding: 0 4px;
     }
-    .mainmenu-card-chevron {
-      color: var(--text-faint);
-      flex-shrink: 0;
-    }
+    .tabbar-btn-badge.show { display: flex; }
 
     /* ══════════════════════════════
        ORDER LIST (Open Bill — daftar customer aktif)
@@ -1028,6 +1038,8 @@
     ══════════════════════════════ */
     .expense-screen {
       flex: 1;
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
       padding: 20px 16px 40px;
     }
@@ -1353,7 +1365,7 @@
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
         </svg>
       </button>
-      <button class="btn-icon" id="logoutBtn" title="Logout" style="display:none;">
+      <button class="btn-icon" id="logoutBtn" title="Logout">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -1364,58 +1376,32 @@
   </div>
 
   <!-- ══════════════════════════════
-       VIEW: MAIN MENU
+       TAB BAR
   ══════════════════════════════ -->
-  <div class="mainmenu-screen" id="view-mainmenu">
-    <div class="mainmenu-greeting">
-      <div class="mainmenu-greeting-hi">Selamat bekerja,</div>
-      <div class="mainmenu-greeting-name" id="mainmenuKasirName">Kasir</div>
-    </div>
-    <div class="mainmenu-cards">
-      <button class="mainmenu-card" id="cardOrder">
-        <div class="mainmenu-card-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        </div>
-        <div class="mainmenu-card-text">
-          <div class="mainmenu-card-title">Order</div>
-          <div class="mainmenu-card-sub">Buka pesanan baru & checkout</div>
-        </div>
-        <span class="mainmenu-card-badge" id="mainmenuOrderBadge" style="display:none;">0</span>
-        <svg class="mainmenu-card-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-
-      <button class="mainmenu-card" id="cardRiwayat">
-        <div class="mainmenu-card-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div class="mainmenu-card-text">
-          <div class="mainmenu-card-title">Riwayat Transaksi</div>
-          <div class="mainmenu-card-sub">Cek transaksi & pengeluaran hari ini</div>
-        </div>
-        <svg class="mainmenu-card-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-
-      <button class="mainmenu-card" id="cardExpense">
-        <div class="mainmenu-card-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <div class="mainmenu-card-text">
-          <div class="mainmenu-card-title">Catatan Pengeluaran</div>
-          <div class="mainmenu-card-sub">Catat pengeluaran operasional</div>
-        </div>
-        <svg class="mainmenu-card-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
+  <div class="tabbar" id="tabbar">
+    <button class="tabbar-btn active" id="tabOrder" data-tab="orderlist">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="tabbar-btn-label">Order</span>
+      <span class="tabbar-btn-badge" id="tabOrderBadge">0</span>
+      <span class="tabbar-indicator"></span>
+    </button>
+    <button class="tabbar-btn" id="tabRiwayat" data-tab="riwayat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="tabbar-btn-label">Riwayat</span>
+      <span class="tabbar-indicator"></span>
+    </button>
+    <button class="tabbar-btn" id="tabExpense" data-tab="expense">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="tabbar-btn-label">Pengeluaran</span>
+      <span class="tabbar-indicator"></span>
+    </button>
   </div>
 
   <!-- ══════════════════════════════
        VIEW: ORDER LIST (Open Bill — daftar customer aktif)
   ══════════════════════════════ -->
-  <div class="orderlist-screen" id="view-orderlist" style="display:none;">
+  <div class="orderlist-screen" id="view-orderlist">
     <div class="order-header">
-      <button class="order-header-back" id="backFromOrderlist">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
       <div class="order-header-title-wrap">
         <div class="order-title">Order</div>
         <div class="order-kasir-tag" id="orderlistKasirTag"></div>
@@ -1474,10 +1460,13 @@
           <span class="total-label">Total</span>
           <span class="total-amount" id="totalAmount">Rp 0</span>
         </div>
-        <div class="metode-group" id="metodeGroup">
-          <button class="metode-btn active" data-metode="Tunai">💵 Tunai</button>
-          <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
-          <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
+        <div class="metode-group-row" id="metodeGroupRow" style="display:none;">
+          <div class="metode-group" id="metodeGroup">
+            <button class="metode-btn active" data-metode="Tunai">💵 Tunai</button>
+            <button class="metode-btn" data-metode="QRIS">📱 QRIS</button>
+            <button class="metode-btn" data-metode="Transfer">🏦 Transfer</button>
+          </div>
+          <button class="batal-bayar-btn" id="btnBatalBayar" title="Batal, tambah item lagi">Batal</button>
         </div>
         <div class="bayar-tunai-area" id="bayarTunaiArea">
           <div class="bayar-input-row">
@@ -1492,8 +1481,21 @@
             <span class="kembalian-amount" id="kembalianAmount">Rp 0</span>
           </div>
         </div>
-        <button class="btn-bayar" id="btnBayar" disabled>
-          <span class="btn-text">Bayar</span>
+
+        <!-- Sebelum order dibuka sebagai Open Bill: dua pilihan aksi -->
+        <div class="footer-action-group" id="footerActionGroup">
+          <button class="btn-bayar btn-openbill" id="btnBukaOpenBill" disabled>
+            <span class="btn-text">📌 Buka sebagai Open Bill</span>
+          </button>
+          <button class="btn-bayar" id="btnCheckoutLangsung" disabled>
+            <span class="btn-text">Checkout Langsung</span>
+            <span class="btn-loader"><div class="spinner"></div></span>
+          </button>
+        </div>
+
+        <!-- Setelah order dibuka sebagai Open Bill: cuma tombol Checkout -->
+        <button class="btn-bayar" id="btnBayar" style="display:none;" disabled>
+          <span class="btn-text">Checkout</span>
           <span class="btn-loader"><div class="spinner"></div></span>
         </button>
       </div>
@@ -1506,9 +1508,6 @@
   ══════════════════════════════ -->
   <div class="riwayat-screen" id="view-riwayat" style="display:none;">
     <div class="order-header">
-      <button class="order-header-back" id="backFromRiwayat">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
       <div class="order-header-title-wrap">
         <div class="order-title">Riwayat Hari Ini</div>
         <div class="order-kasir-tag" id="riwayatTanggalLabel"></div>
@@ -1544,9 +1543,6 @@
   ══════════════════════════════ -->
   <div class="expense-screen" id="view-expense" style="display:none;">
     <div class="order-header" style="background:transparent; border:none; padding:0 0 16px; max-width:440px; margin:0 auto;">
-      <button class="order-header-back" id="backFromExpense">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
       <div class="order-header-title-wrap">
         <div class="order-title">Catatan Pengeluaran</div>
       </div>
@@ -1694,9 +1690,11 @@ let isOnline = navigator.onLine;
 let db = null;
 let syncInProgress = false;
 
-let currentView = 'mainmenu'; // mainmenu | orderlist | kasir | riwayat | expense
+let currentView = 'orderlist'; // orderlist | kasir | riwayat | expense
 let viewHistory = []; // stack untuk tombol back HP
 let currentOrderId = null; // id order aktif yang sedang diisi di view-kasir
+let isOrderOpened = false; // true kalau order sudah resmi "dibuka" sebagai Open Bill
+let isPaymentPhase = false; // true kalau area metode-bayar/uang-bayar sedang terbuka
 let riwayatTab = 'transaksi';
 let riwayatData = { transaksi: [], pengeluaran: [] };
 let riwayatLoaded = false;
@@ -1919,11 +1917,14 @@ function showSyncBanner(synced, failed) {
 // ══════════════════════════════════
 // VIEW SYSTEM
 // Semua "halaman" adalah view dalam satu file, di-toggle lewat JS.
-// History stack dipakai supaya tombol back HP:
-//  - di sub-view (orderlist/kasir/riwayat/expense) -> balik ke Main Menu
-//  - di Main Menu (paling luar) -> trigger logout flow
+// Tiga tab (orderlist, riwayat, expense) berkedudukan SETARA — pindah antar
+// tab tidak menambah history (supaya back-button tidak perlu diklik berkali-kali
+// hanya untuk pindah tab). 'kasir' adalah SATU-SATUNYA sub-level (di dalam tab
+// Order) yang menambah history — back-button dari situ kembali ke daftar Order.
+// Back-button saat berada di level tab manapun (top-level) = niat keluar/logout.
 // ══════════════════════════════════
-const VIEW_IDS = ['mainmenu', 'orderlist', 'kasir', 'riwayat', 'expense'];
+const VIEW_IDS = ['orderlist', 'kasir', 'riwayat', 'expense'];
+const TOP_LEVEL_VIEWS = ['orderlist', 'riwayat', 'expense'];
 
 function showView(viewName, opts = {}) {
   VIEW_IDS.forEach(v => {
@@ -1933,8 +1934,8 @@ function showView(viewName, opts = {}) {
 
   currentView = viewName;
 
-  // Topbar: logout hanya tampil di Main Menu (sesuai keputusan)
-  document.getElementById('logoutBtn').style.display = (viewName === 'mainmenu') ? 'flex' : 'none';
+  // Tab bar: highlight tab aktif (hanya relevan untuk top-level view)
+  updateTabbarActive(viewName);
 
   // Cart FAB hanya relevan di view kasir + HP
   updateCartFabVisibility();
@@ -1944,9 +1945,26 @@ function showView(viewName, opts = {}) {
   }
 }
 
-function goToMainMenu() {
-  showView('mainmenu');
-  refreshMainMenuBadge();
+function updateTabbarActive(viewName) {
+  const tabMap = { orderlist: 'tabOrder', riwayat: 'tabRiwayat', expense: 'tabExpense' };
+  const activeTabId = tabMap[viewName] || 'tabOrder'; // 'kasir' -> tetap highlight tab Order
+  document.querySelectorAll('.tabbar-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === activeTabId);
+  });
+}
+
+function switchTab(viewName) {
+  // Pindah antar tab TIDAK menambah history baru — supaya back-button
+  // tidak perlu ditekan berkali-kali hanya untuk kembali dari tab lain.
+  showView(viewName, { skipHistory: true });
+  history.replaceState({ view: viewName }, '', window.location.href);
+  if (viewName === 'orderlist') renderOrderListScreen();
+  if (viewName === 'riwayat') {
+    document.getElementById('riwayatTanggalLabel').textContent =
+      new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    loadRiwayat();
+  }
+  if (viewName === 'expense') { resetExpenseForm(); refreshExpenseTodayTotal(); }
 }
 
 function updateCartFabVisibility() {
@@ -1970,30 +1988,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Set label kasir di berbagai tempat
   document.getElementById('kasirLabel').textContent = kasir.nama;
-  document.getElementById('mainmenuKasirName').textContent = kasir.nama;
   document.getElementById('orderKasirTag').textContent = kasir.nama;
   document.getElementById('orderlistKasirTag').textContent = kasir.nama;
 
   // ── HISTORY / BACK BUTTON HANDLER ──
-  // State awal: Main Menu. popstate menentukan arah navigasi:
-  //  - kalau ada state.view -> tampilkan view itu (skip push lagi)
-  //  - kalau currentView sudah mainmenu -> anggap user mau keluar -> logout flow
-  history.replaceState({ view: 'mainmenu' }, '', window.location.href);
+  // State awal: tab Order. popstate menentukan arah navigasi:
+  //  - kalau currentView adalah top-level tab -> tombol back = niat keluar/logout
+  //  - kalau currentView = 'kasir' (sub-level) -> balik ke daftar Order
+  history.replaceState({ view: 'orderlist' }, '', window.location.href);
   window.addEventListener('popstate', (e) => {
     if (!sessionStorage.getItem('megar_kasir')) {
       window.location.replace('index.html');
       return;
     }
-    if (currentView === 'mainmenu') {
-      // Sudah di titik paling luar -> tombol back = niat keluar/logout
+    if (TOP_LEVEL_VIEWS.includes(currentView)) {
+      // Sudah di level tab (paling luar) -> tombol back = niat keluar/logout
       handleLogoutRequest();
       // Push balik supaya tidak benar-benar keluar dari app sebelum user konfirmasi
-      history.pushState({ view: 'mainmenu' }, '', window.location.href);
+      history.pushState({ view: currentView }, '', window.location.href);
       return;
     }
-    const target = (e.state && e.state.view) ? e.state.view : 'mainmenu';
-    showView(target, { skipHistory: true });
-    if (target === 'mainmenu') refreshMainMenuBadge();
+    // Dari 'kasir' -> balik ke daftar Order
+    showView('orderlist', { skipHistory: true });
+    renderOrderListScreen();
   });
 
   // Init IndexedDB
@@ -2007,8 +2024,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();
   updateKembalianAndButtons();
 
-  // Tampilkan Main Menu sebagai landing
-  showView('mainmenu', { skipHistory: true });
+  // Tampilkan tab Order sebagai landing
+  showView('orderlist', { skipHistory: true });
+  await renderOrderListScreen();
   await refreshMainMenuBadge();
 
   // Sync jika ada pending saat buka aplikasi
@@ -2022,12 +2040,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function refreshMainMenuBadge() {
   const count = await countOpenOrders();
-  const badge = document.getElementById('mainmenuOrderBadge');
+  const badge = document.getElementById('tabOrderBadge');
   if (count > 0) {
     badge.textContent = count;
-    badge.style.display = 'flex';
+    badge.classList.add('show');
   } else {
-    badge.style.display = 'none';
+    badge.classList.remove('show');
   }
 }
 
@@ -2190,7 +2208,7 @@ function updateKembalianAndButtons() {
   const hasItems = total > 0;
   const isTunai = selectedMetode === 'Tunai';
 
-  document.getElementById('bayarTunaiArea').classList.toggle('show', isTunai);
+  document.getElementById('bayarTunaiArea').classList.toggle('show', isTunai && isPaymentPhase);
 
   let canPay = hasItems;
 
@@ -2207,7 +2225,44 @@ function updateKembalianAndButtons() {
     canPay = hasItems && uangBayar > 0 && uangBayar >= total;
   }
 
-  document.getElementById('btnBayar').disabled = !canPay;
+  if (isOrderOpened) {
+    // Mode lanjutan Open Bill: cuma tombol Checkout
+    const btn = document.getElementById('btnBayar');
+    if (!isPaymentPhase) {
+      btn.disabled = !hasItems;
+      btn.querySelector('.btn-text').textContent = 'Checkout';
+    } else {
+      btn.disabled = !canPay;
+      btn.querySelector('.btn-text').textContent = 'Bayar';
+    }
+  } else {
+    // Mode awal: dua tombol berdampingan
+    document.getElementById('btnBukaOpenBill').disabled = !hasItems;
+    const btnCheckout = document.getElementById('btnCheckoutLangsung');
+    if (!isPaymentPhase) {
+      btnCheckout.disabled = !hasItems;
+      btnCheckout.querySelector('.btn-text').textContent = 'Checkout Langsung';
+    } else {
+      btnCheckout.disabled = !canPay;
+      btnCheckout.querySelector('.btn-text').textContent = 'Bayar';
+    }
+  }
+}
+
+function enterPaymentPhase() {
+  isPaymentPhase = true;
+  document.getElementById('metodeGroupRow').style.display = 'flex';
+  document.getElementById('btnBukaOpenBill').style.display = 'none';
+  updateKembalianAndButtons();
+}
+
+function exitPaymentPhase() {
+  isPaymentPhase = false;
+  document.getElementById('metodeGroupRow').style.display = 'none';
+  if (!isOrderOpened) {
+    document.getElementById('btnBukaOpenBill').style.display = '';
+  }
+  updateKembalianAndButtons();
 }
 
 function updateMenuBadges() {
@@ -2275,11 +2330,6 @@ function genOrderId() {
   return 'ord-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 }
 
-async function openOrderListView() {
-  showView('orderlist');
-  await renderOrderListScreen();
-}
-
 async function renderOrderListScreen() {
   const body = document.getElementById('orderlistBody');
   const orders = await getAllOpenOrders();
@@ -2335,22 +2385,14 @@ async function openExistingOrder(orderId) {
   });
   document.getElementById('uangBayarInput').value = '';
   document.getElementById('orderPanel').classList.remove('show');
+  // Order yang diambil dari daftar Open Bill selalu sudah berstatus "dibuka"
+  setupFooterForOrder(true);
   showView('kasir');
   refreshAll();
 }
 
 async function startNewOrder(namaCustomer) {
   const orderId = genOrderId();
-  const now = new Date().toISOString();
-  const order = {
-    orderId,
-    namaCustomer,
-    items: {},
-    notes: '',
-    dibukaJam: now,
-    terakhirUpdate: now
-  };
-  await saveOpenOrderLocal(order);
   currentOrderId = orderId;
   cart = {};
   document.getElementById('notesInput').value = '';
@@ -2361,15 +2403,39 @@ async function startNewOrder(namaCustomer) {
   });
   document.getElementById('uangBayarInput').value = '';
   document.getElementById('orderPanel').classList.remove('show');
+  // Order baru BELUM dibuka sebagai Open Bill sampai kasir memilih aksinya —
+  // belum ditulis ke IndexedDB (dilakukan saat "Buka sebagai Open Bill" ditekan,
+  // atau tidak sama sekali kalau langsung Checkout).
+  setupFooterForOrder(false);
   showView('kasir');
   refreshAll();
 }
 
+// Atur tampilan footer sesuai status order: sudah "dibuka" (Open Bill) atau belum
+function setupFooterForOrder(opened) {
+  isOrderOpened = opened;
+  isPaymentPhase = false;
+  document.getElementById('metodeGroupRow').style.display = 'none';
+  document.getElementById('bayarTunaiArea').classList.remove('show');
+
+  if (opened) {
+    document.getElementById('footerActionGroup').style.display = 'none';
+    document.getElementById('btnBayar').style.display = '';
+  } else {
+    document.getElementById('footerActionGroup').style.display = 'flex';
+    document.getElementById('btnBukaOpenBill').style.display = '';
+    document.getElementById('btnBayar').style.display = 'none';
+  }
+}
+
 // Simpan progres cart & catatan ke IndexedDB tiap ada perubahan —
 // supaya aman kalau kasir pindah halaman/logout tidak sengaja.
+// HANYA aktif setelah order berstatus "dibuka" (isOrderOpened) — order yang
+// belum dibuka sengaja tidak di-auto-save, supaya tetap konsisten dengan
+// keputusan "Checkout Langsung" tidak pernah masuk ke daftar Open Bill.
 let persistTimer = null;
 function persistCurrentOrder() {
-  if (!currentOrderId) return;
+  if (!currentOrderId || !isOrderOpened) return;
   clearTimeout(persistTimer);
   persistTimer = setTimeout(async () => {
     const existing = await getOpenOrder(currentOrderId);
@@ -2385,7 +2451,7 @@ function persistCurrentOrder() {
 // EVENTS
 // ══════════════════════════════════
 function bindEvents() {
-  // Logout (hanya tampil di Main Menu)
+  // Logout (selalu tampil di topbar — semua tab berkedudukan setara)
   document.getElementById('logoutBtn').addEventListener('click', () => {
     confirmLogoutThen(() => {
       sessionStorage.clear();
@@ -2393,15 +2459,12 @@ function bindEvents() {
     });
   });
 
-  // ── MAIN MENU cards ──
-  document.getElementById('cardOrder').addEventListener('click', openOrderListView);
-  document.getElementById('cardRiwayat').addEventListener('click', openRiwayatView);
-  document.getElementById('cardExpense').addEventListener('click', openExpenseView);
+  // ── TAB BAR ──
+  document.querySelectorAll('.tabbar-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
 
-  // ── Back buttons tiap sub-view -> Main Menu ──
-  document.getElementById('backFromOrderlist').addEventListener('click', goToMainMenu);
-  document.getElementById('backFromRiwayat').addEventListener('click', goToMainMenu);
-  document.getElementById('backFromExpense').addEventListener('click', goToMainMenu);
+  // ── Back button dari cart (sub-level 'kasir') -> daftar Order ──
   document.getElementById('backFromCart').addEventListener('click', async () => {
     showView('orderlist');
     await renderOrderListScreen();
@@ -2453,7 +2516,49 @@ function bindEvents() {
 
   document.getElementById('notesInput').addEventListener('input', persistCurrentOrder);
 
-  document.getElementById('btnBayar').addEventListener('click', handleBayar);
+  // Tombol "Buka sebagai Open Bill" — simpan order ke IndexedDB, footer berubah
+  // permanen ke mode "Checkout" saja.
+  document.getElementById('btnBukaOpenBill').addEventListener('click', async () => {
+    if (Object.keys(cart).length === 0 || !currentOrderId) return;
+    const now = new Date().toISOString();
+    const order = {
+      orderId: currentOrderId,
+      namaCustomer: document.getElementById('orderTitle').textContent,
+      items: cart,
+      notes: document.getElementById('notesInput').value,
+      dibukaJam: now,
+      terakhirUpdate: now
+    };
+    await saveOpenOrderLocal(order);
+    setupFooterForOrder(true);
+    updateKembalianAndButtons();
+    await refreshMainMenuBadge();
+    showToast('Order dibuka — tersimpan di daftar Open Bill', 2200);
+  });
+
+  // Tombol "Checkout Langsung" — dua fase: pertama buka area metode-bayar,
+  // kedua (setelah label berubah jadi "Bayar") baru submit.
+  document.getElementById('btnCheckoutLangsung').addEventListener('click', () => {
+    if (Object.keys(cart).length === 0) return;
+    if (!isPaymentPhase) {
+      enterPaymentPhase();
+    } else {
+      handleBayar();
+    }
+  });
+
+  // Tombol "Checkout" (mode lanjutan Open Bill) — dua fase sama seperti di atas.
+  document.getElementById('btnBayar').addEventListener('click', () => {
+    if (Object.keys(cart).length === 0) return;
+    if (!isPaymentPhase) {
+      enterPaymentPhase();
+    } else {
+      handleBayar();
+    }
+  });
+
+  // Tombol "Batal" — keluar dari fase pembayaran, kembali tambah item
+  document.getElementById('btnBatalBayar').addEventListener('click', exitPaymentPhase);
 
   // Sync button manual
   document.getElementById('syncBtn').addEventListener('click', async () => {
@@ -2486,10 +2591,9 @@ function bindEvents() {
   });
 
   // Success screen
-  document.getElementById('nextTransBtn').addEventListener('click', async () => {
+  document.getElementById('nextTransBtn').addEventListener('click', () => {
     document.getElementById('successScreen').classList.remove('show');
-    showView('orderlist');
-    await renderOrderListScreen();
+    switchTab('orderlist');
   });
 
   // ── Riwayat ──
@@ -2594,7 +2698,9 @@ async function handleBayar() {
 }
 
 function setPayLoading(state) {
-  const btn = document.getElementById('btnBayar');
+  const btn = isOrderOpened
+    ? document.getElementById('btnBayar')
+    : document.getElementById('btnCheckoutLangsung');
   btn.disabled = state;
   btn.classList.toggle('loading', state);
 }
@@ -2607,6 +2713,7 @@ function resetCart() {
   document.querySelectorAll('.metode-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.metode === 'Tunai');
   });
+  setupFooterForOrder(false);
   refreshAll();
 }
 
@@ -2677,13 +2784,6 @@ function todayStr() {
   const m = parts.find(p => p.type === 'month').value;
   const d = parts.find(p => p.type === 'day').value;
   return `${y}-${m}-${d}`;
-}
-
-async function openRiwayatView() {
-  showView('riwayat');
-  document.getElementById('riwayatTanggalLabel').textContent =
-    new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-  await loadRiwayat();
 }
 
 async function loadRiwayat(forceRefresh = false) {
@@ -2830,12 +2930,6 @@ function renderRiwayatPengeluaran(body) {
 // ══════════════════════════════════
 // PENGELUARAN (embedded)
 // ══════════════════════════════════
-async function openExpenseView() {
-  showView('expense');
-  resetExpenseForm();
-  await refreshExpenseTodayTotal();
-}
-
 async function refreshExpenseTodayTotal() {
   const el = document.getElementById('expenseTodayTotal');
   if (!isOnline) { el.textContent = '—'; return; }
