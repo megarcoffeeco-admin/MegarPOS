@@ -175,6 +175,62 @@
     }
     .summary-value.expense-color { color: var(--error); }
 
+    /* ── Rekap Bulanan: Laba-Rugi card ── */
+    .labarugi-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      box-shadow: 0 2px 8px var(--shadow);
+      padding: 18px 16px;
+      margin-bottom: 14px;
+    }
+    .labarugi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+    }
+    .labarugi-row + .labarugi-row { border-top: 1px dashed var(--cream-dark); }
+    .labarugi-label { font-size: 13px; color: var(--text-mid); }
+    .labarugi-value { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; }
+    .labarugi-value.omzet { color: var(--green-deep); }
+    .labarugi-value.pengeluaran { color: var(--error); }
+    .labarugi-row.laba { padding-top: 12px; }
+    .labarugi-row.laba .labarugi-label { font-weight: 600; color: var(--text-dark); }
+    .labarugi-row.laba .labarugi-value { font-size: 20px; }
+    .labarugi-value.positif { color: var(--green-deep); }
+    .labarugi-value.negatif { color: var(--error); }
+    .labarugi-compare {
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 6px;
+    }
+    .labarugi-compare.up { color: var(--green-mid); }
+    .labarugi-compare.down { color: var(--error); }
+
+    /* ── Rekap Bulanan: breakdown list ── */
+    .rekap-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 14px 16px 8px;
+    }
+    .rekap-list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--green-pale);
+      font-size: 12.5px;
+    }
+    .rekap-list-row:last-child { border-bottom: none; }
+    .rekap-list-name { color: var(--text-dark); font-weight: 500; }
+    .rekap-list-sub { color: var(--text-light); font-size: 11px; margin-left: 6px; }
+    .rekap-list-value { color: var(--green-deep); font-weight: 600; }
+    .rekap-list-value.expense { color: var(--error); }
+
     /* ── Riwayat summary strip (2 kolom: Omzet & Pengeluaran) ── */
     .riwayat-summary-strip {
       display: grid;
@@ -1178,30 +1234,29 @@
   <div class="tab-page" id="tab-rekap">
     <div class="section-title">
       📊 Rekap Bulanan
-      <span>generate & simpan ke Google Drive</span>
+      <span>laporan laba-rugi ringkas</span>
     </div>
+
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Generate Laporan</div>
-      </div>
-      <div style="padding: 14px 16px;">
-        <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.6;">
-          Rekap otomatis berjalan setiap tanggal 1. Gunakan tombol di bawah untuk generate rekap kapan saja — hasilnya tersimpan di <strong>Google Drive → POS Megar → Laporan → Rekap_Bulanan</strong>.
-        </p>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <div class="form-group" style="flex:1;min-width:140px;">
-            <label class="form-label">Pilih Bulan</label>
-            <input class="form-input" type="month" id="rekapBulan" />
-          </div>
-          <div style="padding-top:18px;">
-            <button class="btn-submit-form" id="btnGenerateRekap" style="padding:10px 20px;white-space:nowrap;">
-              Generate Rekap
-            </button>
-          </div>
+      <div style="padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+          <label class="form-label">Pilih Bulan</label>
+          <input class="form-input" type="month" id="rekapBulan" />
         </div>
-        <div id="rekapStatus" style="margin-top:12px;font-size:13px;color:var(--text-light);min-height:20px;"></div>
+        <div style="padding-top:18px;">
+          <button class="btn-submit-form" id="btnTampilkanRekap" style="padding:10px 20px;white-space:nowrap;">
+            Tampilkan
+          </button>
+        </div>
       </div>
     </div>
+
+    <div id="rekapContent">
+      <div class="card">
+        <div class="trx-empty" style="padding:30px 16px;">Pilih bulan lalu tekan Tampilkan.</div>
+      </div>
+    </div>
+  </div><!-- /tab-rekap -->
   </div><!-- /tab-rekap -->
 
   <!-- ══ TAB: MENU ══ -->
@@ -1523,39 +1578,11 @@ function bindEvents() {
   const bulanDefault = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   document.getElementById('rekapBulan').value = bulanDefault;
 
-  // Generate rekap
-  document.getElementById('btnGenerateRekap').addEventListener('click', async () => {
+  // Tampilkan rekap
+  document.getElementById('btnTampilkanRekap').addEventListener('click', () => {
     const bulan = document.getElementById('rekapBulan').value;
     if (!bulan) { showToast('Pilih bulan terlebih dahulu', true); return; }
-
-    const btn = document.getElementById('btnGenerateRekap');
-    const status = document.getElementById('rekapStatus');
-    btn.disabled = true;
-    btn.textContent = 'Memproses...';
-    status.textContent = '⏳ Sedang generate rekap ' + bulan + '...';
-    status.style.color = 'var(--text-light)';
-
-    try {
-      const res = await fetch(`${API_URL}?action=generateRekap&passkey=${encodeURIComponent(adminPasskey)}&bulan=${bulan}`);
-      const data = await res.json();
-
-      if (data.status === 'success') {
-        status.textContent = '✅ Rekap ' + bulan + ' berhasil dibuat — cek folder Laporan di Google Drive.';
-        status.style.color = 'var(--green-soft)';
-        showToast('Rekap berhasil dibuat ✓');
-      } else {
-        status.textContent = '❌ ' + (data.message || 'Gagal generate rekap');
-        status.style.color = 'var(--error)';
-        showToast('Gagal: ' + data.message, true);
-      }
-    } catch (e) {
-      status.textContent = '❌ Koneksi gagal';
-      status.style.color = 'var(--error)';
-      showToast('Koneksi gagal', true);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Generate Rekap';
-    }
+    tampilkanRekapBulan(bulan);
   });
 
   // Delete modal
@@ -1633,6 +1660,10 @@ function initTabs() {
         const tglTerpilih = document.getElementById('filterTanggal').value || new Date().toISOString().split('T')[0];
         document.getElementById('filterTanggal').value = tglTerpilih;
         loadRiwayatByDate(tglTerpilih);
+      }
+      if (tab.dataset.tab === 'rekap') {
+        const bulanTerpilih = document.getElementById('rekapBulan').value;
+        if (bulanTerpilih) tampilkanRekapBulan(bulanTerpilih);
       }
     });
   });
@@ -1845,6 +1876,168 @@ function renderRiwayatPengeluaran(body) {
     });
     body.appendChild(div);
   });
+}
+
+// ══════════════════════════════════
+// REKAP BULANAN
+// ══════════════════════════════════
+async function tampilkanRekapBulan(bulan) {
+  const content = document.getElementById('rekapContent');
+  content.innerHTML = '<div class="card"><div class="trx-empty" style="padding:30px 16px;">Memuat rekap...</div></div>';
+
+  try {
+    const res = await fetch(`${API_URL}?action=getRekapBulanan&passkey=${encodeURIComponent(adminPasskey)}&bulan=${bulan}`);
+    const data = await res.json();
+
+    if (data.status === 'not_found') {
+      renderRekapNotFound(bulan);
+      return;
+    }
+    if (data.status !== 'success') {
+      content.innerHTML = `<div class="card"><div class="trx-empty" style="padding:30px 16px;">Gagal memuat rekap: ${data.message || 'terjadi kesalahan'}</div></div>`;
+      return;
+    }
+
+    // Ambil bulan lalu untuk perbandingan (diam-diam, tidak masalah kalau tidak ada)
+    const [y, m] = bulan.split('-').map(Number);
+    const prevDate = new Date(y, m - 2, 1); // m sudah 1-indexed, -2 supaya mundur 1 bulan
+    const bulanLalu = prevDate.getFullYear() + '-' + String(prevDate.getMonth() + 1).padStart(2, '0');
+    let dataLalu = null;
+    try {
+      const resLalu = await fetch(`${API_URL}?action=getRekapBulanan&passkey=${encodeURIComponent(adminPasskey)}&bulan=${bulanLalu}`);
+      const jsonLalu = await resLalu.json();
+      if (jsonLalu.status === 'success') dataLalu = jsonLalu;
+    } catch (e) { /* diamkan, perbandingan opsional */ }
+
+    renderRekapContent(data, dataLalu);
+  } catch (e) {
+    content.innerHTML = '<div class="card"><div class="trx-empty" style="padding:30px 16px;">Koneksi gagal.</div></div>';
+  }
+}
+
+function renderRekapNotFound(bulan) {
+  const content = document.getElementById('rekapContent');
+  const bulanLabel = new Date(bulan + '-01T00:00:00').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  content.innerHTML = `
+    <div class="card">
+      <div style="padding:30px 16px;text-align:center;">
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;">
+          Rekap untuk <strong>${bulanLabel}</strong> belum tersedia. Rekap otomatis berjalan tiap tanggal 1 — atau generate manual sekarang.
+        </p>
+        <button class="btn-submit-form" id="btnGenerateSekarang" style="padding:10px 24px;">Generate Sekarang</button>
+        <div id="rekapGenerateStatus" style="margin-top:12px;font-size:12.5px;color:var(--text-light);min-height:18px;"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('btnGenerateSekarang').addEventListener('click', async () => {
+    const btn = document.getElementById('btnGenerateSekarang');
+    const status = document.getElementById('rekapGenerateStatus');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+    status.textContent = '⏳ Sedang generate...';
+
+    try {
+      const res = await fetch(`${API_URL}?action=generateRekap&passkey=${encodeURIComponent(adminPasskey)}&bulan=${bulan}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        showToast('Rekap berhasil dibuat ✓');
+        tampilkanRekapBulan(bulan); // langsung tampilkan hasilnya
+      } else {
+        status.textContent = '❌ ' + (data.message || 'Gagal generate rekap');
+        status.style.color = 'var(--error)';
+        btn.disabled = false;
+        btn.textContent = 'Generate Sekarang';
+      }
+    } catch (e) {
+      status.textContent = '❌ Koneksi gagal';
+      status.style.color = 'var(--error)';
+      btn.disabled = false;
+      btn.textContent = 'Generate Sekarang';
+    }
+  });
+}
+
+function renderRekapContent(data, dataLalu) {
+  const content = document.getElementById('rekapContent');
+  const lr = data.labaRugi;
+  const labaClass = lr.labaKotor >= 0 ? 'positif' : 'negatif';
+
+  // Perbandingan omzet vs bulan lalu (%)
+  let compareHtml = '';
+  if (dataLalu && dataLalu.labaRugi.omzet > 0) {
+    const pct = ((lr.omzet - dataLalu.labaRugi.omzet) / dataLalu.labaRugi.omzet) * 100;
+    const arrow = pct >= 0 ? '▲' : '▼';
+    const cls = pct >= 0 ? 'up' : 'down';
+    compareHtml = `<span class="labarugi-compare ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs bulan lalu</span>`;
+  }
+
+  let html = `
+    <div class="labarugi-card">
+      <div class="labarugi-row">
+        <span class="labarugi-label">Total Omzet</span>
+        <span class="labarugi-value omzet">${formatRp(lr.omzet)} ${compareHtml}</span>
+      </div>
+      <div class="labarugi-row">
+        <span class="labarugi-label">Total Pengeluaran</span>
+        <span class="labarugi-value pengeluaran">− ${formatRp(lr.pengeluaran)}</span>
+      </div>
+      <div class="labarugi-row laba">
+        <span class="labarugi-label">Estimasi Laba Kotor</span>
+        <span class="labarugi-value ${labaClass}">${formatRp(lr.labaKotor)}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="riwayat-summary-strip" style="padding:14px 16px 0;">
+        <div class="summary-card">
+          <div class="summary-label">Total Transaksi</div>
+          <div class="summary-value small">${data.ringkasan.totalTrx}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Rata-rata / Transaksi</div>
+          <div class="summary-value small">${formatRp(data.ringkasan.rataRata)}</div>
+        </div>
+      </div>
+
+      <div class="rekap-section-title">Omzet per Metode Bayar</div>
+      ${data.metodeBayar.length === 0 ? '<div class="trx-empty" style="padding:12px 16px;">Tidak ada data.</div>' :
+        data.metodeBayar.map(m => `
+          <div class="rekap-list-row">
+            <span class="rekap-list-name">${m.metode}</span>
+            <span class="rekap-list-value">${formatRp(m.omzet)}</span>
+          </div>
+        `).join('')}
+
+      <div class="rekap-section-title">Pengeluaran per Kategori</div>
+      ${data.pengeluaranKategori.length === 0 ? '<div class="trx-empty" style="padding:12px 16px;">Belum ada pengeluaran tercatat.</div>' :
+        data.pengeluaranKategori.map(k => `
+          <div class="rekap-list-row">
+            <span class="rekap-list-name">${k.kategori}</span>
+            <span class="rekap-list-value expense">${formatRp(k.total)}</span>
+          </div>
+        `).join('')}
+
+      <div class="rekap-section-title">Menu Terlaris</div>
+      ${data.menuTerlaris.length === 0 ? '<div class="trx-empty" style="padding:12px 16px;">Tidak ada data.</div>' :
+        data.menuTerlaris.slice(0, 10).map(m => `
+          <div class="rekap-list-row">
+            <span class="rekap-list-name">${m.nama}<span class="rekap-list-sub">×${m.qty}</span></span>
+            <span class="rekap-list-value">${formatRp(m.omzet)}</span>
+          </div>
+        `).join('')}
+
+      <div class="rekap-section-title">Performa Kasir</div>
+      ${data.performaKasir.length === 0 ? '<div class="trx-empty" style="padding:12px 16px;">Tidak ada data.</div>' :
+        data.performaKasir.map(k => `
+          <div class="rekap-list-row">
+            <span class="rekap-list-name">${k.nama}<span class="rekap-list-sub">${k.trx} trx</span></span>
+            <span class="rekap-list-value">${formatRp(k.omzet)}</span>
+          </div>
+        `).join('')}
+    </div>
+  `;
+
+  content.innerHTML = html;
 }
 
 // ══════════════════════════════════
