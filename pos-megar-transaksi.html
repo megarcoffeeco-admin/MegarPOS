@@ -2353,6 +2353,13 @@ function genOrderId() {
   return 'ord-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 }
 
+// ID unik per transaksi checkout — dibuat SEKALI sebelum kirim ke server,
+// tetap sama meski transaksi ini terkirim ulang (retry/offline sync).
+// Backend pakai ini untuk mencegah transaksi tersimpan dobel.
+function genClientTrxId() {
+  return 'ctx-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+}
+
 async function renderOrderListScreen() {
   const body = document.getElementById('orderlistBody');
   const orders = await getAllOpenOrders();
@@ -2667,7 +2674,9 @@ async function handleBayar() {
     items: items,
     total: getTotal(),
     metodeBayar: selectedMetode,
-    catatan: notes ? `[${namaCustomer}] ${notes}` : `[${namaCustomer}]`
+    catatan: notes ? `[${namaCustomer}] ${notes}` : `[${namaCustomer}]`,
+    clientTrxId: genClientTrxId(),
+    namaCustomer: namaCustomer
   };
 
   setPayLoading(true);
@@ -2875,14 +2884,26 @@ function renderRiwayatBody() {
   }
 }
 
+// Parse format catatan "[NamaCustomer] catatan asli" jadi 2 bagian terpisah.
+// Kalau tidak cocok pola ini (data lama sebelum fitur ini ada), anggap semuanya
+// catatan biasa tanpa nama customer.
+function parseCatatan(raw) {
+  if (!raw) return { namaCustomer: '', catatan: '' };
+  const match = raw.match(/^\[(.*?)\]\s?(.*)$/s);
+  if (match) return { namaCustomer: match[1], catatan: match[2] || '' };
+  return { namaCustomer: '', catatan: raw };
+}
+
 function renderRiwayatTransaksi(body) {
   // Group baris per nota
   const grouped = {};
   riwayatData.transaksi.forEach(row => {
     if (!grouped[row.noNota]) {
+      const parsed = parseCatatan(row.catatan);
       grouped[row.noNota] = {
         noNota: row.noNota, jam: row.jam, kasirNama: row.kasirNama,
-        total: row.total, metodeBayar: row.metodeBayar, items: []
+        total: row.total, metodeBayar: row.metodeBayar, items: [],
+        namaCustomer: parsed.namaCustomer, catatan: parsed.catatan
       };
     }
     grouped[row.noNota].items.push(row);
@@ -2899,11 +2920,12 @@ function renderRiwayatTransaksi(body) {
   notas.forEach(nota => {
     const div = document.createElement('div');
     div.className = 'riwayat-nota';
+    const namaLabel = nota.namaCustomer ? ` · ${nota.namaCustomer}` : '';
     div.innerHTML = `
       <div class="riwayat-nota-head">
         <div class="riwayat-nota-head-info">
           <div class="riwayat-nota-no">${nota.noNota}</div>
-          <div class="riwayat-nota-meta">${nota.jam || ''} · ${nota.kasirNama || ''} · ${nota.metodeBayar || ''}</div>
+          <div class="riwayat-nota-meta">${nota.jam || ''} · ${nota.kasirNama || ''}${namaLabel} · ${nota.metodeBayar || ''}</div>
         </div>
         <div class="riwayat-nota-total">${formatRp(nota.total)}</div>
         <svg class="riwayat-nota-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -2916,6 +2938,7 @@ function renderRiwayatTransaksi(body) {
             <span>${formatRp(it.subtotal)}</span>
           </div>
         `).join('')}
+        ${nota.catatan ? `<div class="riwayat-detail-row" style="border-top:1px dashed var(--cream-dark);margin-top:4px;padding-top:8px;"><span class="name" style="font-style:italic;color:var(--text-light);">📝 ${nota.catatan}</span></div>` : ''}
       </div>
     `;
     div.querySelector('.riwayat-nota-head').addEventListener('click', () => {
