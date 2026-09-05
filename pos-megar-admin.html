@@ -173,6 +173,24 @@
       color: var(--text-faint);
       margin-top: 3px;
     }
+    .summary-value.expense-color { color: var(--error); }
+
+    /* ── Riwayat summary strip (2 kolom: Omzet & Pengeluaran) ── */
+    .riwayat-summary-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .chip-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
 
     /* ── Arabika daily price ── */
     .arabika-grid {
@@ -802,41 +820,132 @@
     .kasir-add-form.show { display: block; }
 
     /* ── Nav Tabs ── */
-    .nav-tabs {
+    /* ── Tab Bar (mengikuti gaya dashboard kasir) ── */
+    .tabbar {
       display: flex;
-      gap: 4px;
-      background: var(--green-pale2);
-      padding: 4px;
-      border-radius: 12px;
+      background: white;
+      border-radius: 14px;
+      border: 1px solid var(--cream-dark);
       margin-bottom: 20px;
-      flex-wrap: wrap;
+      overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow);
     }
-    .nav-tab {
+    .tabbar-btn {
       flex: 1;
-      min-width: 70px;
-      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 11px 4px 9px;
       border: none;
-      border-radius: 9px;
       background: transparent;
+      cursor: pointer;
+      color: var(--text-light);
+      position: relative;
+      transition: color 0.15s;
+    }
+    .tabbar-btn.active { color: var(--green-mid); background: var(--green-pale2); }
+    .tabbar-btn-label {
       font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       font-weight: 500;
-      color: var(--text-light);
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-      white-space: nowrap;
     }
-    .nav-tab.active {
-      background: white;
-      color: var(--green-mid);
-      font-weight: 600;
-      box-shadow: 0 1px 6px var(--shadow);
+    .tabbar-btn.active .tabbar-btn-label { font-weight: 700; }
+    .tabbar-indicator {
+      position: absolute;
+      bottom: 0; left: 12px; right: 12px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--green-mid);
+      opacity: 0;
+      transition: opacity 0.15s;
     }
+    .tabbar-btn.active .tabbar-indicator { opacity: 1; }
 
     /* ── Tab pages ── */
     .tab-page { display: none; }
     .tab-page.active { display: block; }
+
+    /* ── Sub-tab (Transaksi / Pengeluaran di dalam tab Transaksi) ── */
+    .subtab-row {
+      display: flex;
+      gap: 6px;
+      padding: 12px 16px 0;
+    }
+    .subtab-btn {
+      flex: 1;
+      padding: 9px 4px;
+      border-radius: 20px;
+      border: 1.5px solid var(--cream-dark);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .subtab-btn.active {
+      background: var(--green-mid);
+      border-color: var(--green-mid);
+      color: white;
+    }
+
+    /* ── Riwayat expandable (mengikuti pola dashboard kasir) ── */
+    .riwayat-nota {
+      border-bottom: 1px solid var(--green-pale);
+      overflow: hidden;
+    }
+    .riwayat-nota:last-child { border-bottom: none; }
+    .riwayat-nota-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+    .riwayat-nota-head-info { flex: 1; min-width: 0; }
+    .riwayat-nota-no {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--green-soft);
+      font-weight: 500;
+    }
+    .riwayat-nota-meta {
+      font-size: 11.5px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    .riwayat-nota-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green-deep);
+      flex-shrink: 0;
+    }
+    .riwayat-nota-total.expense { color: var(--error); }
+    .riwayat-nota-chevron {
+      color: var(--text-faint);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .riwayat-nota.expanded .riwayat-nota-chevron { transform: rotate(180deg); }
+    .riwayat-nota-detail {
+      display: none;
+      padding: 0 16px 12px;
+      border-top: 1px dashed var(--cream-dark);
+      margin: 0 16px;
+    }
+    .riwayat-nota.expanded .riwayat-nota-detail { display: block; }
+    .riwayat-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 12.5px;
+      color: var(--text-mid);
+    }
+    .riwayat-detail-row .name { flex: 1; }
+    .riwayat-detail-row .qty { color: var(--text-light); margin: 0 8px; }
 
     /* ── Weekly table ── */
     .week-table {
@@ -962,7 +1071,6 @@
     @media (min-width: 600px) {
       .page { padding: 24px 24px 48px; }
       .arabika-grid { grid-template-columns: 1fr 1fr; }
-      .nav-tab { font-size: 12px; padding: 9px 12px; }
     }
   </style>
 </head>
@@ -991,85 +1099,33 @@
 
 <div class="page">
 
-  <!-- Nav Tabs -->
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-tab="overview">📊 Overview</button>
-    <button class="nav-tab" data-tab="transaksi">📋 Transaksi</button>
-    <button class="nav-tab" data-tab="mingguan">📅 Mingguan</button>
-    <button class="nav-tab" data-tab="menu">🌿 Menu</button>
-    <button class="nav-tab" data-tab="kasir">👤 Kasir</button>
+  <!-- Tab Bar -->
+  <div class="tabbar" id="tabbar">
+    <button class="tabbar-btn active" id="tabTransaksi" data-tab="transaksi">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="tabbar-btn-label">Transaksi</span>
+      <span class="tabbar-indicator"></span>
+    </button>
+    <button class="tabbar-btn" id="tabRekap" data-tab="rekap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="tabbar-btn-label">Rekap Bulanan</span>
+      <span class="tabbar-indicator"></span>
+    </button>
+    <button class="tabbar-btn" id="tabMenu" data-tab="menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      <span class="tabbar-btn-label">Menu</span>
+      <span class="tabbar-indicator"></span>
+    </button>
+    <button class="tabbar-btn" id="tabKasir" data-tab="kasir">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="tabbar-btn-label">Kasir</span>
+      <span class="tabbar-indicator"></span>
+    </button>
   </div>
-
-  <!-- ══ TAB: OVERVIEW ══ -->
-  <div class="tab-page active" id="tab-overview">
-
-  <!-- Summary Strip -->
-  <div class="summary-strip">
-    <div class="summary-card">
-      <div class="summary-label">Omzet Hari Ini</div>
-      <div class="summary-value small" id="omzetHariIni">Rp 0</div>
-      <div class="summary-sub" id="tglHariIni">—</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Transaksi</div>
-      <div class="summary-value" id="jmlTransaksi">0</div>
-      <div class="summary-sub">nota hari ini</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Menu Aktif</div>
-      <div class="summary-value" id="jmlMenuAktif">0</div>
-      <div class="summary-sub">dari total menu</div>
-    </div>
-  </div>
-
-  <!-- Transaksi Hari Ini -->
-  <div class="section-title">
-    📋 Transaksi Hari Ini
-    <span id="trxDate">—</span>
-  </div>
-  <div class="card">
-    <div class="trx-list" id="trxList">
-      <div class="trx-empty">Memuat data transaksi...</div>
-    </div>
-  </div>
-
-  <!-- Rekap Bulanan -->
-  <div class="section-title">
-    📊 Rekap Bulanan
-    <span>generate & simpan ke Google Drive</span>
-  </div>
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">Generate Laporan</div>
-    </div>
-    <div style="padding: 14px 16px;">
-      <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.6;">
-        Rekap otomatis berjalan setiap tanggal 1. Gunakan tombol di bawah untuk generate rekap kapan saja — hasilnya tersimpan di <strong>Google Drive → POS Megar → Laporan → Rekap_Bulanan</strong>.
-      </p>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <div class="form-group" style="flex:1;min-width:140px;">
-          <label class="form-label">Pilih Bulan</label>
-          <input class="form-input" type="month" id="rekapBulan" />
-        </div>
-        <div style="padding-top:18px;">
-          <button class="btn-submit-form" id="btnGenerateRekap" style="padding:10px 20px;white-space:nowrap;">
-            Generate Rekap
-          </button>
-        </div>
-      </div>
-      <div id="rekapStatus" style="margin-top:12px;font-size:13px;color:var(--text-light);min-height:20px;"></div>
-    </div>
-  </div>
-
-  </div><!-- /tab-overview -->
 
   <!-- ══ TAB: TRANSAKSI ══ -->
-  <div class="tab-page" id="tab-transaksi">
+  <div class="tab-page active" id="tab-transaksi">
 
-    <div class="section-title">
-      📋 Riwayat Transaksi
-      <span id="trxFilterLabel">hari ini</span>
-    </div>
     <div class="card">
       <div class="date-filter">
         <label>Tanggal</label>
@@ -1077,107 +1133,76 @@
         <button class="btn-today" id="btnToday">Hari Ini</button>
         <button class="btn-filter-go" id="btnFilterGo">Tampilkan</button>
       </div>
+    </div>
 
+    <!-- Ringkasan omzet & pengeluaran (mengikuti tanggal yang difilter) -->
+    <div class="riwayat-summary-strip">
+      <div class="summary-card">
+        <div class="summary-label">Omzet</div>
+        <div class="summary-value small" id="riwayatTotalOmzet">Rp 0</div>
+        <div class="summary-sub" id="riwayatTanggalLabel1">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Pengeluaran</div>
+        <div class="summary-value small expense-color" id="riwayatTotalExpense">Rp 0</div>
+        <div class="summary-sub" id="riwayatTanggalLabel2">—</div>
+      </div>
+    </div>
+
+    <div class="card">
       <!-- Rekap per kasir -->
-      <div style="padding:10px 16px 0;" id="kasirSummaryWrap">
-        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Kasir</div>
+      <div style="padding:14px 16px 0;" id="kasirSummaryWrap">
+        <div class="chip-section-label">Rekap per Kasir</div>
         <div id="kasirSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
       </div>
 
       <!-- Rekap per metode bayar -->
       <div style="padding:0 16px;" id="metodeSummaryWrap">
-        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Metode Bayar</div>
-        <div id="metodeSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+        <div class="chip-section-label">Rekap per Metode Bayar</div>
+        <div id="metodeSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;"></div>
       </div>
 
-      <div class="trx-list" id="trxListFilter">
-        <div class="trx-empty">Pilih tanggal dan klik Tampilkan</div>
+      <!-- Sub-tab Transaksi / Pengeluaran -->
+      <div class="subtab-row">
+        <button class="subtab-btn active" data-subtab="transaksi">Transaksi</button>
+        <button class="subtab-btn" data-subtab="pengeluaran">Pengeluaran</button>
       </div>
-    </div>
 
-    <div class="section-title" style="margin-top:16px;">
-      📋 Rekap Pengeluaran Hari Ini
-      <span id="expenseFilterLabel">hari ini</span>
-    </div>
-    <div class="card">
-      <div style="padding:14px 16px 0;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Rekap per Staff</div>
-        <div id="expenseSummaryList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;"></div>
-      </div>
-      <div class="trx-list" id="expenseListFilter">
+      <div id="riwayatBody" style="padding-top:10px;">
         <div class="trx-empty">Memuat...</div>
       </div>
     </div>
   </div><!-- /tab-transaksi -->
 
-  <!-- ══ TAB: MINGGUAN ══ -->
-  <div class="tab-page" id="tab-mingguan">
+  <!-- ══ TAB: REKAP BULANAN ══ -->
+  <div class="tab-page" id="tab-rekap">
     <div class="section-title">
-      📅 Ringkasan 7 Hari Terakhir
+      📊 Rekap Bulanan
+      <span>generate & simpan ke Google Drive</span>
     </div>
-
-    <!-- Summary cards mingguan -->
-    <div class="summary-strip" id="weekSummaryStrip">
-      <div class="summary-card">
-        <div class="summary-label">Total Omzet</div>
-        <div class="summary-value small" id="weekOmzet">—</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Total Transaksi</div>
-        <div class="summary-value" id="weekTrx">—</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Hari Terbaik</div>
-        <div class="summary-value small" id="weekBest">—</div>
-      </div>
-    </div>
-
-    <!-- Menu terlaris minggu ini -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">
-        <div class="card-title">Menu Terlaris Minggu Ini</div>
-      </div>
-      <div style="padding:8px 0;" id="weekTopMenu">
-        <div class="trx-empty">Memuat...</div>
-      </div>
-    </div>
-
-    <!-- Rekap per metode bayar minggu ini -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">
-        <div class="card-title">Rekap per Metode Bayar</div>
-      </div>
-      <div style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap;" id="weekMetodeList">
-        <div class="trx-empty">Memuat...</div>
-      </div>
-    </div>
-
-    <!-- Tabel harian -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Omzet per Hari</div>
-        <button class="btn-add-menu" id="btnRefreshWeek">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Refresh
-        </button>
+        <div class="card-title">Generate Laporan</div>
       </div>
-      <div style="overflow-x:auto;">
-        <table class="week-table" id="weekTable">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Hari</th>
-              <th class="td-right">Transaksi</th>
-              <th class="td-right">Omzet</th>
-            </tr>
-          </thead>
-          <tbody id="weekTableBody">
-            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat data...</td></tr>
-          </tbody>
-        </table>
+      <div style="padding: 14px 16px;">
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.6;">
+          Rekap otomatis berjalan setiap tanggal 1. Gunakan tombol di bawah untuk generate rekap kapan saja — hasilnya tersimpan di <strong>Google Drive → POS Megar → Laporan → Rekap_Bulanan</strong>.
+        </p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:140px;">
+            <label class="form-label">Pilih Bulan</label>
+            <input class="form-input" type="month" id="rekapBulan" />
+          </div>
+          <div style="padding-top:18px;">
+            <button class="btn-submit-form" id="btnGenerateRekap" style="padding:10px 20px;white-space:nowrap;">
+              Generate Rekap
+            </button>
+          </div>
+        </div>
+        <div id="rekapStatus" style="margin-top:12px;font-size:13px;color:var(--text-light);min-height:20px;"></div>
       </div>
     </div>
-  </div><!-- /tab-mingguan -->
+  </div><!-- /tab-rekap -->
 
   <!-- ══ TAB: MENU ══ -->
   <div class="tab-page" id="tab-menu">
@@ -1274,28 +1299,6 @@
         <div class="trx-empty">Memuat data kasir...</div>
       </div>
     </div>
-
-    <!-- Rekap per kasir minggu ini -->
-    <div class="section-title" style="margin-top:16px;">
-      📊 Performa Kasir Minggu Ini
-    </div>
-    <div class="card">
-      <div style="overflow-x:auto;">
-        <table class="week-table" id="kasirPerfTable">
-          <thead>
-            <tr>
-              <th>Kasir</th>
-              <th class="td-right">Transaksi</th>
-              <th class="td-right">Omzet</th>
-              <th class="td-right">Rata-rata</th>
-            </tr>
-          </thead>
-          <tbody id="kasirPerfBody">
-            <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div><!-- /tab-kasir -->
 
 </div><!-- /page -->
@@ -1333,7 +1336,6 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwfUGnt5N1OdULSuM5sYYa0
 let adminPasskey = '';
 let allMenu = [];
 let pendingDeleteId = null;
-let todayTrx = [];
 
 const DEFAULT_KATEGORI = ['Espresso Based', 'Manual Brew', 'Mocktail', 'Chocolate & Matcha', 'Snack'];
 
@@ -1365,35 +1367,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = 'index.html';
     return;
   }
-  // Replace history entry supaya tombol back tidak kembali ke halaman ini setelah logout
-  // Push dummy state — tombol back akan hit state ini dulu
-  history.pushState(null, '', window.location.href);
-  history.pushState(null, '', window.location.href);
-  // Block back button
-  window.addEventListener('popstate', () => {
-    if (!sessionStorage.getItem('megar_admin')) {
-      window.location.replace('index.html');
-    } else {
-      history.pushState(null, '', window.location.href);
-    }
-  });
-
 
   // ── BACK BUTTON HANDLER ──
-  // Tombol back selalu ke login, bukan halaman sebelumnya
-  window.addEventListener('popstate', function() {
+  // Tombol back selalu ke login, bukan halaman sebelumnya (dashboard admin
+  // tidak punya "sub-level" navigasi seperti dashboard kasir — tiap tab
+  // berkedudukan setara, jadi back-button di sini konsisten = keluar).
+  history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', () => {
     window.location.replace('index.html');
   });
-  // Push state agar popstate bisa terpicu
-  history.pushState(null, '', window.location.href);
 
-  const now = new Date();
-  const tgl = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  document.getElementById('tglHariIni').textContent = tgl;
-  document.getElementById('trxDate').textContent = tgl;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('filterTanggal').value = today;
 
   showLoading('Memuat data...');
-  await Promise.all([loadMenu(), loadTodayTrx()]);
+  await Promise.all([loadMenu(), loadRiwayatByDate(today)]);
   hideLoading();
   bindEvents();
   renderKategoriDropdown();
@@ -1408,7 +1396,6 @@ async function loadMenu() {
     const data = await res.json();
     if (data.status === 'success') {
       allMenu = data.menu;
-      updateSummary();
       // Menu list rendered on demand when Tab Menu is opened
     }
   } catch (e) {
@@ -1416,137 +1403,6 @@ async function loadMenu() {
   }
 }
 
-function renderMenuList() {
-  // Legacy function - tabs use renderMenuList2
-  const list = document.getElementById('menuList');
-  if (!list) return;
-  document.getElementById('menuCount').textContent = allMenu.length + ' item';
-  list.innerHTML = '';
-
-  if (allMenu.length === 0) {
-    list.innerHTML = '<div class="trx-empty">Belum ada menu.</div>';
-    return;
-  }
-
-  allMenu.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'menu-row';
-    row.innerHTML = `
-      <div class="menu-row-info">
-        <div class="menu-row-name">${item.item}</div>
-        <div class="menu-row-cat">${item.kategori}</div>
-      </div>
-      <div class="menu-row-price ${item.harga_manual ? 'manual-tag' : ''}">
-        ${item.harga_manual ? 'Manual' : formatRp(item.harga)}
-      </div>
-      <div class="menu-row-actions">
-        <label class="row-toggle">
-          <input type="checkbox" ${item.aktif ? 'checked' : ''} data-id="${item.id}" class="toggle-aktif" />
-          <div class="toggle-track"></div>
-        </label>
-        <button class="btn-delete" data-id="${item.id}" data-name="${item.item}" title="Hapus">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-          </svg>
-        </button>
-      </div>
-    `;
-    list.appendChild(row);
-  });
-
-  // Toggle aktif
-  list.querySelectorAll('.toggle-aktif').forEach(toggle => {
-    toggle.addEventListener('change', async () => {
-      await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: toggle.dataset.id, aktif: toggle.checked });
-      const item = allMenu.find(m => m.id === toggle.dataset.id);
-      if (item) item.aktif = toggle.checked;
-      updateSummary();
-      showToast(toggle.checked ? 'Menu diaktifkan' : 'Menu dinonaktifkan');
-    });
-  });
-
-  // Delete
-  list.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', () => {
-      pendingDeleteId = btn.dataset.id;
-      document.getElementById('deleteModalBody').textContent =
-        `"${btn.dataset.name}" akan dihapus dari daftar menu.`;
-      document.getElementById('deleteModal').classList.add('show');
-    });
-  });
-}
-
-function updateSummary() {
-  const aktif = allMenu.filter(m => m.aktif).length;
-  document.getElementById('jmlMenuAktif').textContent = aktif + ' / ' + allMenu.length;
-}
-
-// ══════════════════════════════════
-// LOAD TRANSAKSI HARI INI
-// ══════════════════════════════════
-async function loadTodayTrx() {
-  // Transaksi ada di Google Sheets file bulan ini
-  // Kita fetch via Apps Script endpoint getTodayTrx
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${today}`);
-    const data = await res.json();
-
-    if (data.status === 'success') {
-      todayTrx = data.transaksi || [];
-      renderTrxList();
-      updateTrxSummary();
-    } else {
-      document.getElementById('trxList').innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
-    }
-  } catch (e) {
-    document.getElementById('trxList').innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
-  }
-}
-
-function renderTrxList() {
-  const list = document.getElementById('trxList');
-  if (todayTrx.length === 0) {
-    list.innerHTML = '<div class="trx-empty">Belum ada transaksi hari ini.</div>';
-    return;
-  }
-
-  // Group by noNota
-  const grouped = {};
-  todayTrx.forEach(row => {
-    if (!grouped[row.noNota]) {
-      grouped[row.noNota] = { noNota: row.noNota, jam: row.jam, kasir: row.kasirNama, items: [], total: row.total, metode: row.metodeBayar };
-    }
-    grouped[row.noNota].items.push(`${row.itemNama} x${row.qty}`);
-  });
-
-  list.innerHTML = '';
-  Object.values(grouped).reverse().forEach(trx => {
-    const div = document.createElement('div');
-    div.className = 'trx-row';
-    div.innerHTML = `
-      <div class="trx-nota">${trx.noNota.split('-').slice(-1)[0]}</div>
-      <div class="trx-info">
-        <div class="trx-items">${trx.items.join(', ')}</div>
-        <div class="trx-meta">${trx.jam} · ${trx.kasir}</div>
-      </div>
-      <div class="trx-total">${formatRp(trx.total)}</div>
-      <div class="trx-metode ${trx.metode}">${trx.metode}</div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function updateTrxSummary() {
-  const notaSet = new Set(todayTrx.map(r => r.noNota));
-  const omzet = [...notaSet].reduce((sum, nota) => {
-    const row = todayTrx.find(r => r.noNota === nota);
-    return sum + (row ? Number(row.total) : 0);
-  }, 0);
-  document.getElementById('jmlTransaksi').textContent = notaSet.size;
-  document.getElementById('omzetHariIni').textContent = formatRp(omzet);
-}
 
 // ══════════════════════════════════
 // EVENTS
@@ -1570,7 +1426,8 @@ function bindEvents() {
   // Refresh
   document.getElementById('refreshBtn').addEventListener('click', async () => {
     showLoading('Memperbarui data...');
-    await Promise.all([loadMenu(), loadTodayTrx()]);
+    const tgl = document.getElementById('filterTanggal').value || new Date().toISOString().split('T')[0];
+    await Promise.all([loadMenu(), loadRiwayatByDate(tgl)]);
     hideLoading();
     showToast('Data diperbarui');
   });
@@ -1585,18 +1442,13 @@ function bindEvents() {
   document.getElementById('filterTanggal').value = today;
   document.getElementById('btnToday').addEventListener('click', () => {
     document.getElementById('filterTanggal').value = today;
-    loadTrxByDate(today);
-    loadExpenseByDate(today);
+    loadRiwayatByDate(today);
   });
   document.getElementById('btnFilterGo').addEventListener('click', () => {
     const tgl = document.getElementById('filterTanggal').value;
     if (!tgl) { showToast('Pilih tanggal dulu', true); return; }
-    loadTrxByDate(tgl);
-    loadExpenseByDate(tgl);
+    loadRiwayatByDate(tgl);
   });
-
-  // Weekly refresh
-  document.getElementById('btnRefreshWeek').addEventListener('click', loadWeeklySummary);
 
   // Kasir add form
   document.getElementById('btnShowAddKasir').addEventListener('click', () => {
@@ -1740,13 +1592,6 @@ async function apiPost(body) {
   }
 }
 
-function clearAddForm() {
-  document.getElementById('newItemName').value = '';
-  document.getElementById('newItemHarga').value = '';
-  document.getElementById('newItemHarga').disabled = false;
-  document.getElementById('newItemManual').checked = false;
-}
-
 function formatRp(num) {
   return 'Rp ' + Number(num).toLocaleString('id-ID');
 }
@@ -1771,356 +1616,234 @@ function hideLoading() {
 // NAV TABS
 // ══════════════════════════════════
 function initTabs() {
-  document.querySelectorAll('.nav-tab').forEach(tab => {
+  document.querySelectorAll('.tabbar-btn').forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tabbar-btn').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
 
       // Lazy load tab content
-      if (tab.dataset.tab === 'mingguan') loadWeeklySummary();
       if (tab.dataset.tab === 'kasir') loadKasirList();
       if (tab.dataset.tab === 'menu') {
         renderMenuList2();
         renderKategoriDropdown();
       }
       if (tab.dataset.tab === 'transaksi') {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('filterTanggal').value = today;
-        loadTrxByDate(today);
-        loadExpenseByDate(today);
+        const tglTerpilih = document.getElementById('filterTanggal').value || new Date().toISOString().split('T')[0];
+        document.getElementById('filterTanggal').value = tglTerpilih;
+        loadRiwayatByDate(tglTerpilih);
       }
+    });
+  });
+
+  // Sub-tab Transaksi / Pengeluaran
+  document.querySelectorAll('.subtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      riwayatSubtab = btn.dataset.subtab;
+      renderRiwayatBody();
     });
   });
 }
 
+
 // ══════════════════════════════════
-// TRANSAKSI FILTER
+// RIWAYAT (Transaksi + Pengeluaran, expandable, mengikuti tanggal filter)
 // ══════════════════════════════════
-async function loadTrxByDate(tanggal) {
-  const list = document.getElementById('trxListFilter');
-  list.innerHTML = '<div class="trx-empty">Memuat...</div>';
+let riwayatData = { transaksi: [], pengeluaran: [] };
+let riwayatSubtab = 'transaksi';
+
+async function loadRiwayatByDate(tanggal) {
+  const body = document.getElementById('riwayatBody');
+  body.innerHTML = '<div class="trx-empty">Memuat...</div>';
   document.getElementById('kasirSummaryList').innerHTML = '';
   document.getElementById('metodeSummaryList').innerHTML = '';
 
-  try {
-    const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`);
-    const data = await res.json();
-    const trx = data.transaksi || [];
-
-    const label = tanggal === new Date().toISOString().split('T')[0]
-      ? 'hari ini' : tanggal;
-    document.getElementById('trxFilterLabel').textContent = label;
-
-    if (trx.length === 0) {
-      list.innerHTML = '<div class="trx-empty">Tidak ada transaksi pada tanggal ini.</div>';
-      return;
-    }
-
-    // Group by nota
-    const grouped = {};
-    const kasirMap = {};
-    const metodeMap = {};
-    trx.forEach(row => {
-      if (!grouped[row.noNota]) {
-        grouped[row.noNota] = { noNota: row.noNota, jam: row.jam, kasir: row.kasirNama, items: [], total: row.total, metode: row.metodeBayar };
-      }
-      grouped[row.noNota].items.push(`${row.itemNama} x${row.qty}`);
-      if (!kasirMap[row.kasirNama]) kasirMap[row.kasirNama] = { trx: new Set(), omzet: 0 };
-      kasirMap[row.kasirNama].trx.add(row.noNota);
-    });
-
-    // Rekap per kasir
-    const kasirSummary = document.getElementById('kasirSummaryList');
-    Object.entries(kasirMap).forEach(([nama, d]) => {
-      const omzet = [...d.trx].reduce((s, nota) => {
-        const row = trx.find(r => r.noNota === nota);
-        return s + (row ? Number(row.total) : 0);
-      }, 0);
-      const chip = document.createElement('div');
-      chip.style.cssText = 'background:var(--green-pale);border:1px solid var(--green-light);border-radius:20px;padding:5px 12px;font-size:12px;';
-      chip.innerHTML = `<strong>${nama}</strong> · ${d.trx.size} trx · ${formatRp(omzet)}`;
-      kasirSummary.appendChild(chip);
-    });
-
-    // Rekap per metode bayar (hitung per nota, bukan per baris item, supaya tidak double count)
-    Object.values(grouped).forEach(g => {
-      const metode = g.metode || 'Tidak diketahui';
-      if (!metodeMap[metode]) metodeMap[metode] = { trx: 0, omzet: 0 };
-      metodeMap[metode].trx++;
-      metodeMap[metode].omzet += Number(g.total);
-    });
-
-    const metodeIcon = { Tunai: '💵', QRIS: '📱', Transfer: '🏦' };
-    const metodeColor = {
-      Tunai:    { bg: '#e8f5e9', border: '#a5d6a7', text: '#2e7d32' },
-      QRIS:     { bg: '#e3f2fd', border: '#90caf9', text: '#1565c0' },
-      Transfer: { bg: '#fff3e0', border: '#ffcc80', text: '#e65100' }
-    };
-    const metodeSummary = document.getElementById('metodeSummaryList');
-    Object.entries(metodeMap).forEach(([metode, d]) => {
-      const c = metodeColor[metode] || { bg: 'var(--green-pale)', border: 'var(--green-light)', text: 'var(--text-mid)' };
-      const chip = document.createElement('div');
-      chip.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:${c.text};border-radius:20px;padding:5px 12px;font-size:12px;`;
-      chip.innerHTML = `${metodeIcon[metode] || '💳'} <strong>${metode}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
-      metodeSummary.appendChild(chip);
-    });
-
-    // Render list
-    list.innerHTML = '';
-    Object.values(grouped).reverse().forEach(trx => {
-      const div = document.createElement('div');
-      div.className = 'trx-row';
-      div.innerHTML = `
-        <div class="trx-nota">${trx.noNota.split('-').slice(-1)[0]}</div>
-        <div class="trx-info">
-          <div class="trx-items">${trx.items.join(', ')}</div>
-          <div class="trx-meta">${trx.jam} · ${trx.kasir}</div>
-        </div>
-        <div class="trx-total">${formatRp(trx.total)}</div>
-        <div class="trx-metode ${trx.metode}">${trx.metode}</div>
-      `;
-      list.appendChild(div);
-    });
-
-  } catch(e) {
-    list.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
-  }
-}
-
-// ══════════════════════════════════
-// PENGELUARAN FILTER (rekap per staff)
-// ══════════════════════════════════
-async function loadExpenseByDate(tanggal) {
-  const list = document.getElementById('expenseListFilter');
-  const summaryList = document.getElementById('expenseSummaryList');
-  list.innerHTML = '<div class="trx-empty">Memuat...</div>';
-  summaryList.innerHTML = '';
-
-  const label = tanggal === new Date().toISOString().split('T')[0] ? 'hari ini' : tanggal;
-  document.getElementById('expenseFilterLabel').textContent = label;
+  const isToday = tanggal === new Date().toISOString().split('T')[0];
+  const label = isToday ? 'Hari ini' : new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('riwayatTanggalLabel1').textContent = label;
+  document.getElementById('riwayatTanggalLabel2').textContent = label;
 
   try {
-    const res = await fetch(`${API_URL}?action=getTodayExpense&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`);
-    const data = await res.json();
-    const pengeluaran = data.pengeluaran || [];
+    const [trxRes, expRes] = await Promise.all([
+      fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`).then(r => r.json()),
+      fetch(`${API_URL}?action=getTodayExpense&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tanggal}`).then(r => r.json())
+    ]);
 
-    if (pengeluaran.length === 0) {
-      list.innerHTML = '<div class="trx-empty">Tidak ada pengeluaran pada tanggal ini.</div>';
-      return;
-    }
+    riwayatData.transaksi = (trxRes.status === 'success') ? (trxRes.transaksi || []) : [];
+    riwayatData.pengeluaran = (expRes.status === 'success') ? (expRes.pengeluaran || []) : [];
 
-    // Rekap per staff (setiap baris = 1 catatan pengeluaran, tidak perlu group by nota)
-    const staffMap = {};
-    let totalPengeluaran = 0;
-    pengeluaran.forEach(row => {
-      const nama = row.kasirNama || 'Tidak diketahui';
-      if (!staffMap[nama]) staffMap[nama] = { count: 0, total: 0 };
-      staffMap[nama].count++;
-      staffMap[nama].total += Number(row.nominal);
-      totalPengeluaran += Number(row.nominal);
-    });
-
-    Object.entries(staffMap).forEach(([nama, d]) => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'background:var(--error-light);border:1px solid rgba(192,57,43,0.25);color:var(--error);border-radius:20px;padding:5px 12px;font-size:12px;';
-      chip.innerHTML = `<strong>${nama}</strong> · ${d.count} catatan · ${formatRp(d.total)}`;
-      summaryList.appendChild(chip);
-    });
-
-    // Total chip
-    const totalChip = document.createElement('div');
-    totalChip.style.cssText = 'background:var(--text-dark);color:white;border-radius:20px;padding:5px 12px;font-size:12px;';
-    totalChip.innerHTML = `Total Pengeluaran · ${formatRp(totalPengeluaran)}`;
-    summaryList.appendChild(totalChip);
-
-    // Render list, terbaru dulu
-    list.innerHTML = '';
-    [...pengeluaran].reverse().forEach(row => {
-      const div = document.createElement('div');
-      div.className = 'trx-row';
-      div.innerHTML = `
-        <div class="trx-nota">${String(row.noNota).split('-').slice(-1)[0]}</div>
-        <div class="trx-info">
-          <div class="trx-items">${row.item} <span style="color:var(--text-faint);">· ${row.kategori}</span></div>
-          <div class="trx-meta">${row.jam} · ${row.kasirNama}</div>
-        </div>
-        <div class="trx-total">${formatRp(row.nominal)}</div>
-      `;
-      list.appendChild(div);
-    });
-
+    updateRiwayatSummary();
+    renderKasirMetodeChips();
+    renderRiwayatBody();
   } catch (e) {
-    list.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
+    body.innerHTML = '<div class="trx-empty">Gagal memuat data.</div>';
   }
 }
 
-// ══════════════════════════════════
-// WEEKLY SUMMARY
-// ══════════════════════════════════
-async function loadWeeklySummary() {
-  const tbody = document.getElementById('weekTableBody');
-  const topMenu = document.getElementById('weekTopMenu');
-  const weekMetodeList = document.getElementById('weekMetodeList');
-  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-faint);">Memuat...</td></tr>';
-  topMenu.innerHTML = '<div class="trx-empty">Memuat...</div>';
-  weekMetodeList.innerHTML = '<div class="trx-empty">Memuat...</div>';
-
-  // Generate last 7 days
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split('T')[0]);
-  }
-
-  const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-  let weekOmzet = 0, weekTrxTotal = 0;
-  let bestDay = { omzet: 0, tgl: '' };
-  const itemMap = {};
-  const weekMetodeMap = {};
-  const rows = [];
-
-  for (const tgl of days) {
-    try {
-      const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tgl}`);
-      const data = await res.json();
-      const trx = data.transaksi || [];
-
-      const notaSet = new Set(trx.map(r => r.noNota));
-      const omzet = [...notaSet].reduce((s, nota) => {
-        const row = trx.find(r => r.noNota === nota);
-        return s + (row ? Number(row.total) : 0);
-      }, 0);
-
-      trx.forEach(r => {
-        if (!itemMap[r.itemNama]) itemMap[r.itemNama] = { qty: 0, omzet: 0 };
-        itemMap[r.itemNama].qty += Number(r.qty);
-        itemMap[r.itemNama].omzet += Number(r.subtotal);
-      });
-
-      // Rekap per metode bayar — hitung per nota (bukan per baris item) supaya tidak double count
-      [...notaSet].forEach(nota => {
-        const row = trx.find(r => r.noNota === nota);
-        if (!row) return;
-        const metode = row.metodeBayar || 'Tidak diketahui';
-        if (!weekMetodeMap[metode]) weekMetodeMap[metode] = { trx: 0, omzet: 0 };
-        weekMetodeMap[metode].trx++;
-        weekMetodeMap[metode].omzet += Number(row.total);
-      });
-
-      weekOmzet += omzet;
-      weekTrxTotal += notaSet.size;
-      if (omzet > bestDay.omzet) bestDay = { omzet: omzet, tgl: tgl };
-
-      const d = new Date(tgl + 'T00:00:00');
-      rows.push({ tgl, hari: dayNames[d.getDay()], trx: notaSet.size, omzet });
-    } catch(e) {
-      rows.push({ tgl, hari: '—', trx: 0, omzet: 0 });
+function updateRiwayatSummary() {
+  // Omzet dihitung per nota (bukan per baris item) supaya tidak double count
+  const notaSet = new Set();
+  let totalOmzet = 0;
+  riwayatData.transaksi.forEach(row => {
+    if (!notaSet.has(row.noNota)) {
+      notaSet.add(row.noNota);
+      totalOmzet += Number(row.total) || 0;
     }
+  });
+  const totalExpense = riwayatData.pengeluaran.reduce((s, r) => s + (Number(r.nominal) || 0), 0);
+
+  document.getElementById('riwayatTotalOmzet').textContent = formatRp(totalOmzet);
+  document.getElementById('riwayatTotalExpense').textContent = formatRp(totalExpense);
+}
+
+function renderKasirMetodeChips() {
+  const kasirSummary = document.getElementById('kasirSummaryList');
+  const metodeSummary = document.getElementById('metodeSummaryList');
+  kasirSummary.innerHTML = '';
+  metodeSummary.innerHTML = '';
+
+  if (riwayatData.transaksi.length === 0) {
+    kasirSummary.innerHTML = '<div class="trx-empty" style="padding:4px 0;">Tidak ada transaksi.</div>';
+    return;
   }
 
-  // Update summary cards
-  document.getElementById('weekOmzet').textContent = formatRp(weekOmzet);
-  document.getElementById('weekTrx').textContent = weekTrxTotal;
-  const bestDate = bestDay.tgl ? new Date(bestDay.tgl + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short' }) : '—';
-  document.getElementById('weekBest').textContent = bestDay.tgl ? `${bestDate} · ${formatRp(bestDay.omzet)}` : '—';
-
-  // Table
-  tbody.innerHTML = '';
-  rows.forEach(r => {
-    const tr = document.createElement('tr');
-    const isToday = r.tgl === new Date().toISOString().split('T')[0];
-    tr.innerHTML = `
-      <td>${new Date(r.tgl + 'T00:00:00').toLocaleDateString('id-ID', {day:'numeric',month:'short'})}${isToday ? ' <span style="font-size:9px;background:var(--green-pale);color:var(--green-mid);padding:1px 5px;border-radius:4px;">hari ini</span>' : ''}</td>
-      <td>${r.hari}</td>
-      <td class="td-right">${r.trx}</td>
-      <td class="td-num">${r.omzet > 0 ? formatRp(r.omzet) : '—'}</td>
-    `;
-    tbody.appendChild(tr);
+  // Group by nota dulu (hindari double count)
+  const grouped = {};
+  riwayatData.transaksi.forEach(row => {
+    if (!grouped[row.noNota]) {
+      grouped[row.noNota] = { kasir: row.kasirNama, total: Number(row.total), metode: row.metodeBayar };
+    }
   });
 
-  // Top menu
-  const sorted = Object.entries(itemMap).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
-  if (sorted.length === 0) {
-    topMenu.innerHTML = '<div class="trx-empty">Belum ada data minggu ini.</div>';
-  } else {
-    topMenu.innerHTML = '';
-    sorted.forEach(([nama, d], i) => {
-      const div = document.createElement('div');
-      div.style.cssText = 'display:flex;align-items:center;padding:9px 16px;border-bottom:1px solid var(--green-pale);gap:10px;';
-      div.innerHTML = `
-        <div style="width:22px;height:22px;background:var(--green-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--green-mid);flex-shrink:0;">${i+1}</div>
-        <div style="flex:1;font-size:13px;font-weight:500;">${nama}</div>
-        <div style="font-size:12px;color:var(--text-light);">${d.qty} pcs</div>
-        <div style="font-size:12px;font-weight:600;color:var(--green-mid);">${formatRp(d.omzet)}</div>
-      `;
-      topMenu.appendChild(div);
-    });
-  }
+  // Rekap per kasir
+  const kasirMap = {};
+  Object.values(grouped).forEach(g => {
+    if (!kasirMap[g.kasir]) kasirMap[g.kasir] = { trx: 0, omzet: 0 };
+    kasirMap[g.kasir].trx++;
+    kasirMap[g.kasir].omzet += g.total;
+  });
+  Object.entries(kasirMap).forEach(([nama, d]) => {
+    const chip = document.createElement('div');
+    chip.style.cssText = 'background:var(--green-pale);border:1px solid var(--green-light);border-radius:20px;padding:5px 12px;font-size:12px;';
+    chip.innerHTML = `<strong>${nama}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
+    kasirSummary.appendChild(chip);
+  });
 
   // Rekap per metode bayar
+  const metodeMap = {};
+  Object.values(grouped).forEach(g => {
+    const metode = g.metode || 'Tidak diketahui';
+    if (!metodeMap[metode]) metodeMap[metode] = { trx: 0, omzet: 0 };
+    metodeMap[metode].trx++;
+    metodeMap[metode].omzet += g.total;
+  });
   const metodeIcon = { Tunai: '💵', QRIS: '📱', Transfer: '🏦' };
   const metodeColor = {
     Tunai:    { bg: '#e8f5e9', border: '#a5d6a7', text: '#2e7d32' },
     QRIS:     { bg: '#e3f2fd', border: '#90caf9', text: '#1565c0' },
     Transfer: { bg: '#fff3e0', border: '#ffcc80', text: '#e65100' }
   };
-  if (Object.keys(weekMetodeMap).length === 0) {
-    weekMetodeList.innerHTML = '<div class="trx-empty">Belum ada data minggu ini.</div>';
-  } else {
-    weekMetodeList.innerHTML = '';
-    Object.entries(weekMetodeMap).forEach(([metode, d]) => {
-      const c = metodeColor[metode] || { bg: 'var(--green-pale)', border: 'var(--green-light)', text: 'var(--text-mid)' };
-      const chip = document.createElement('div');
-      chip.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:${c.text};border-radius:20px;padding:6px 14px;font-size:13px;`;
-      chip.innerHTML = `${metodeIcon[metode] || '💳'} <strong>${metode}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
-      weekMetodeList.appendChild(chip);
-    });
-  }
-
-  // Kasir performance
-  await loadKasirPerf(days);
+  Object.entries(metodeMap).forEach(([metode, d]) => {
+    const c = metodeColor[metode] || { bg: 'var(--green-pale)', border: 'var(--green-light)', text: 'var(--text-mid)' };
+    const chip = document.createElement('div');
+    chip.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:${c.text};border-radius:20px;padding:5px 12px;font-size:12px;`;
+    chip.innerHTML = `${metodeIcon[metode] || '💳'} <strong>${metode}</strong> · ${d.trx} trx · ${formatRp(d.omzet)}`;
+    metodeSummary.appendChild(chip);
+  });
 }
 
-async function loadKasirPerf(days) {
-  const tbody = document.getElementById('kasirPerfBody');
-  const kasirMap = {};
-
-  for (const tgl of days) {
-    try {
-      const res = await fetch(`${API_URL}?action=getTodayTrx&passkey=${encodeURIComponent(adminPasskey)}&tanggal=${tgl}`);
-      const data = await res.json();
-      const trx = data.transaksi || [];
-      const notaSet = {};
-      trx.forEach(r => {
-        if (!notaSet[r.noNota]) {
-          notaSet[r.noNota] = { kasir: r.kasirNama, total: Number(r.total) };
-        }
-      });
-      Object.values(notaSet).forEach(({ kasir, total }) => {
-        if (!kasirMap[kasir]) kasirMap[kasir] = { trx: 0, omzet: 0 };
-        kasirMap[kasir].trx++;
-        kasirMap[kasir].omzet += total;
-      });
-    } catch(e) {}
+function renderRiwayatBody() {
+  const body = document.getElementById('riwayatBody');
+  if (riwayatSubtab === 'transaksi') {
+    renderRiwayatTransaksi(body);
+  } else {
+    renderRiwayatPengeluaran(body);
   }
+}
 
-  tbody.innerHTML = '';
-  if (Object.keys(kasirMap).length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-faint);">Belum ada data.</td></tr>';
+function renderRiwayatTransaksi(body) {
+  // Group baris per nota
+  const grouped = {};
+  riwayatData.transaksi.forEach(row => {
+    if (!grouped[row.noNota]) {
+      grouped[row.noNota] = {
+        noNota: row.noNota, jam: row.jam, kasirNama: row.kasirNama,
+        total: row.total, metodeBayar: row.metodeBayar, items: []
+      };
+    }
+    grouped[row.noNota].items.push(row);
+  });
+
+  const notas = Object.values(grouped).sort((a, b) => (b.jam || '').localeCompare(a.jam || ''));
+
+  if (notas.length === 0) {
+    body.innerHTML = '<div class="trx-empty">Tidak ada transaksi pada tanggal ini.</div>';
     return;
   }
-  Object.entries(kasirMap).sort((a,b) => b[1].omzet - a[1].omzet).forEach(([nama, d]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${nama}</strong></td>
-      <td class="td-right">${d.trx}</td>
-      <td class="td-num">${formatRp(d.omzet)}</td>
-      <td class="td-right" style="color:var(--text-light)">${formatRp(Math.round(d.omzet/d.trx))}</td>
+
+  body.innerHTML = '';
+  notas.forEach(nota => {
+    const div = document.createElement('div');
+    div.className = 'riwayat-nota';
+    div.innerHTML = `
+      <div class="riwayat-nota-head">
+        <div class="riwayat-nota-head-info">
+          <div class="riwayat-nota-no">${nota.noNota}</div>
+          <div class="riwayat-nota-meta">${nota.jam || ''} · ${nota.kasirNama || ''} · ${nota.metodeBayar || ''}</div>
+        </div>
+        <div class="riwayat-nota-total">${formatRp(nota.total)}</div>
+        <svg class="riwayat-nota-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="riwayat-nota-detail">
+        ${nota.items.map(it => `
+          <div class="riwayat-detail-row">
+            <span class="name">${it.itemNama}</span>
+            <span class="qty">×${it.qty}</span>
+            <span>${formatRp(it.subtotal)}</span>
+          </div>
+        `).join('')}
+      </div>
     `;
-    tbody.appendChild(tr);
+    div.querySelector('.riwayat-nota-head').addEventListener('click', () => {
+      div.classList.toggle('expanded');
+    });
+    body.appendChild(div);
+  });
+}
+
+function renderRiwayatPengeluaran(body) {
+  const rows = [...riwayatData.pengeluaran].sort((a, b) => (b.jam || '').localeCompare(a.jam || ''));
+
+  if (rows.length === 0) {
+    body.innerHTML = '<div class="trx-empty">Tidak ada pengeluaran pada tanggal ini.</div>';
+    return;
+  }
+
+  body.innerHTML = '';
+  rows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'riwayat-nota';
+    div.innerHTML = `
+      <div class="riwayat-nota-head">
+        <div class="riwayat-nota-head-info">
+          <div class="riwayat-nota-no">${row.noNota}</div>
+          <div class="riwayat-nota-meta">${row.jam || ''} · ${row.kasirNama || ''} · ${row.kategori || ''}</div>
+        </div>
+        <div class="riwayat-nota-total expense">${formatRp(row.nominal)}</div>
+        <svg class="riwayat-nota-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="riwayat-nota-detail">
+        <div class="riwayat-detail-row"><span class="name">${row.item}</span></div>
+        ${row.catatan ? `<div class="riwayat-detail-row"><span class="name" style="font-style:italic;color:var(--text-light);">${row.catatan}</span></div>` : ''}
+      </div>
+    `;
+    div.querySelector('.riwayat-nota-head').addEventListener('click', () => {
+      div.classList.toggle('expanded');
+    });
+    body.appendChild(div);
   });
 }
 
@@ -2232,7 +1955,6 @@ function renderMenuList2() {
       await apiPost({ action: 'toggleMenuItem', passkey: adminPasskey, id: toggle.dataset.id, aktif: toggle.checked });
       const item = allMenu.find(m => m.id === toggle.dataset.id);
       if (item) item.aktif = toggle.checked;
-      updateSummary();
       showToast(toggle.checked ? 'Menu diaktifkan' : 'Menu dinonaktifkan');
     });
   });
